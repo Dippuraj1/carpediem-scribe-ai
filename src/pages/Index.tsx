@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import BookForm from "@/components/BookForm";
 import { BookFormData } from "@/types/book";
@@ -16,12 +17,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ApiKeyInput from "@/components/ApiKeyInput";
+import GenerationProgress from "@/components/GenerationProgress";
 
 const Index = () => {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState("");
   const [bookContent, setBookContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
   const [showIntro, setShowIntro] = useState(true);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<BookFormData | null>(null);
@@ -38,6 +41,39 @@ const Index = () => {
       localStorage.setItem("openai_api_key", apiKey);
     }
   }, [apiKey]);
+
+  // Add progress simulation when generating
+  useEffect(() => {
+    let progressInterval: number | null = null;
+    
+    if (isGenerating) {
+      setGenerationProgress(0);
+      
+      progressInterval = window.setInterval(() => {
+        setGenerationProgress(prev => {
+          // Cap at 95% until actual completion
+          const newProgress = Math.min(prev + (Math.random() * 5), 95);
+          return Number(newProgress.toFixed(0));
+        });
+      }, 800);
+    } else if (generationProgress > 0) {
+      // When generation completes, move to 100%
+      setGenerationProgress(100);
+      
+      // Reset progress after a delay
+      const resetTimeout = setTimeout(() => {
+        setGenerationProgress(0);
+      }, 1000);
+      
+      return () => clearTimeout(resetTimeout);
+    }
+    
+    return () => {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+    };
+  }, [isGenerating]);
 
   const handleApiKeyChange = (key: string) => {
     setApiKey(key);
@@ -197,6 +233,8 @@ const Index = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <GenerationProgress isGenerating={isGenerating} progress={generationProgress} />
     </div>
   );
 };

@@ -24,8 +24,8 @@ export const exportToDocx = async (content: string, filename: string, options: B
     // Apply formatting to content
     const formattedHTML = createDocxContent(content, options);
     
-    // For now, we'll use a simple HTML to DOCX download approach
-    const htmlBlob = new Blob([formattedHTML], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    // For now, we'll use HTML with correct mime type
+    const htmlBlob = new Blob([formattedHTML], { type: 'text/html' });
     
     // Trigger download
     downloadFile(htmlBlob, `${filename}.docx`);
@@ -45,8 +45,8 @@ export const exportToPdf = async (content: string, filename: string, options: Bo
     // Apply formatting to content
     const formattedHTML = createPdfContent(content, options);
     
-    // For now, we'll use a simple HTML to PDF download approach
-    const htmlBlob = new Blob([formattedHTML], { type: 'application/pdf' });
+    // Use HTML with correct mime type for PDF
+    const htmlBlob = new Blob([formattedHTML], { type: 'text/html' });
     
     // Trigger download
     downloadFile(htmlBlob, `${filename}.pdf`);
