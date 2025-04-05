@@ -71,18 +71,11 @@ const Index = () => {
         setBookContent(result.content);
         
         // Save to localStorage as a draft
-        localStorage.setItem(
-          "book_draft",
-          JSON.stringify({
-            content: result.content,
-            timestamp: new Date().toISOString(),
-            title: formData.title,
-          })
-        );
+        saveBookToDraft(result.content, formData.title);
 
         toast({
           title: "Book Generated Successfully",
-          description: "Your book has been generated and is ready to preview.",
+          description: "Your book has been generated and is ready to preview and edit.",
         });
       }
     } catch (error) {
@@ -97,6 +90,23 @@ const Index = () => {
     }
   };
 
+  const handleContentUpdate = (updatedContent: string) => {
+    setBookContent(updatedContent);
+    saveBookToDraft(updatedContent);
+  };
+
+  const saveBookToDraft = (content: string, title?: string) => {
+    const { title: parsedTitle } = JSON.parse(localStorage.getItem("book_draft") || "{}");
+    localStorage.setItem(
+      "book_draft",
+      JSON.stringify({
+        content: content,
+        timestamp: new Date().toISOString(),
+        title: title || parsedTitle || "Untitled Book",
+      })
+    );
+  };
+
   const handleReset = () => {
     setBookContent("");
   };
@@ -109,7 +119,11 @@ const Index = () => {
         {showIntro && !bookContent ? (
           <Intro onGetStarted={() => setShowIntro(false)} />
         ) : bookContent ? (
-          <BookPreview bookContent={bookContent} onReset={handleReset} />
+          <BookPreview 
+            bookContent={bookContent} 
+            onReset={handleReset} 
+            onContentUpdate={handleContentUpdate}
+          />
         ) : (
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold mb-6 text-center">

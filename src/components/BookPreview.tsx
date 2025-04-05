@@ -4,30 +4,40 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Book, FileText, Download, FileCheck } from "lucide-react";
+import { Clock, Book, FileText, Download, FileCheck, Edit } from "lucide-react";
 import { exportToDocx, exportToPdf, exportToGoogleDocs } from "@/utils/exporters";
 import { calculateBookStats, parseBookContent } from "@/utils/formatters";
+import BookEditor from "@/components/BookEditor";
 
 interface BookPreviewProps {
   bookContent: string;
   onReset: () => void;
+  onContentUpdate?: (content: string) => void;
 }
 
-const BookPreview = ({ bookContent, onReset }: BookPreviewProps) => {
+const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps) => {
   const [activeTab, setActiveTab] = useState("preview");
-  const { title } = parseBookContent(bookContent);
-  const { wordCount, chapterCount, estimatedReadingTime } = calculateBookStats(bookContent);
+  const [currentContent, setCurrentContent] = useState(bookContent);
+  const { title } = parseBookContent(currentContent);
+  const { wordCount, chapterCount, estimatedReadingTime } = calculateBookStats(currentContent);
+
+  const handleContentUpdate = (updatedContent: string) => {
+    setCurrentContent(updatedContent);
+    if (onContentUpdate) {
+      onContentUpdate(updatedContent);
+    }
+  };
 
   const handleDownloadDocx = async () => {
-    await exportToDocx(bookContent, title || "book");
+    await exportToDocx(currentContent, title || "book");
   };
 
   const handleDownloadPdf = async () => {
-    await exportToPdf(bookContent, title || "book");
+    await exportToPdf(currentContent, title || "book");
   };
 
   const handleExportToGoogleDocs = async () => {
-    await exportToGoogleDocs(bookContent, title || "book");
+    await exportToGoogleDocs(currentContent, title || "book");
   };
 
   return (
@@ -67,8 +77,12 @@ const BookPreview = ({ bookContent, onReset }: BookPreviewProps) => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 mb-4">
+        <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="preview">Preview</TabsTrigger>
+          <TabsTrigger value="editor">
+            <Edit className="mr-1 h-4 w-4" />
+            Edit
+          </TabsTrigger>
           <TabsTrigger value="export">Export Options</TabsTrigger>
         </TabsList>
         
@@ -79,10 +93,17 @@ const BookPreview = ({ bookContent, onReset }: BookPreviewProps) => {
                 className="book-content whitespace-pre-line"
                 style={{ maxHeight: "600px", overflowY: "auto" }}
               >
-                {bookContent}
+                {currentContent}
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="editor" className="mt-0">
+          <BookEditor 
+            bookContent={currentContent} 
+            onUpdateContent={handleContentUpdate} 
+          />
         </TabsContent>
         
         <TabsContent value="export" className="mt-0">
