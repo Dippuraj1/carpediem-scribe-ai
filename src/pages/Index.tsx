@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
-import BookForm, { BookFormData } from "@/components/BookForm";
+import BookForm from "@/components/BookForm";
+import { BookFormData } from "@/types/book";
 import BookPreview from "@/components/BookPreview";
 import AppHeader from "@/components/AppHeader";
 import Intro from "@/components/Intro";
@@ -26,7 +26,6 @@ const Index = () => {
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<BookFormData | null>(null);
 
-  // Load API key from localStorage on component mount
   useEffect(() => {
     const savedApiKey = localStorage.getItem("openai_api_key");
     if (savedApiKey) {
@@ -34,7 +33,6 @@ const Index = () => {
     }
   }, []);
 
-  // Save API key to localStorage when it changes
   useEffect(() => {
     if (apiKey) {
       localStorage.setItem("openai_api_key", apiKey);
@@ -55,13 +53,10 @@ const Index = () => {
       return;
     }
 
-    // Save the API key
     localStorage.setItem("openai_api_key", apiKey);
     
-    // Close the dialog
     setShowApiKeyDialog(false);
     
-    // If we have pending form data, proceed with generation
     if (pendingFormData) {
       proceedWithBookGeneration(pendingFormData);
       setPendingFormData(null);
@@ -70,7 +65,6 @@ const Index = () => {
 
   const handleFormSubmit = async (formData: BookFormData) => {
     if (!apiKey) {
-      // Store the form data and show the API key dialog
       setPendingFormData(formData);
       setShowApiKeyDialog(true);
       return;
@@ -107,7 +101,6 @@ const Index = () => {
       if (result.content) {
         setBookContent(result.content);
         
-        // Save to localStorage as a draft
         saveBookToDraft(result.content, formData.title);
 
         toast({
@@ -180,7 +173,6 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* API Key Dialog */}
       <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
         <DialogContent>
           <DialogHeader>

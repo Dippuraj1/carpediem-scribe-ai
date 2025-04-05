@@ -13,10 +13,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface GenreCategory {
+  label: string;
+  options: string[];
+}
+
 interface TagSelectorProps {
   label: string;
   tags: string[];
-  options: { label: string; options: string[] }[] | string[];
+  options: GenreCategory[] | string[];
   onAddTag: (tag: string) => void;
   onRemoveTag: (tag: string) => void;
   placeholder?: string;
@@ -32,7 +37,7 @@ const TagSelector = ({
 }: TagSelectorProps) => {
   // Check if options is a flat array or grouped
   const isGrouped = Array.isArray(options) && options.length > 0 && 
-                  'label' in options[0] && 'options' in options[0];
+                  typeof options[0] !== 'string';
 
   return (
     <div className="space-y-2">
@@ -65,7 +70,7 @@ const TagSelector = ({
         <SelectContent>
           {isGrouped ? (
             // Render grouped options
-            (options as { label: string; options: string[] }[]).map((category) => (
+            (options as GenreCategory[]).map((category) => (
               <SelectGroup key={category.label}>
                 <SelectLabel>{category.label}</SelectLabel>
                 {category.options
