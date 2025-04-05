@@ -8,7 +8,9 @@ import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -21,7 +23,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckIcon, PlusIcon, X } from "lucide-react";
+import { X } from "lucide-react";
+import { genreCategories, styleOptions, toneOptions } from "@/data/genreOptions";
 
 // Book form props interface
 interface BookFormProps {
@@ -34,6 +37,7 @@ export interface BookFormData {
   title: string;
   description: string;
   genre: string[];
+  subGenre: string[];
   style: string[];
   tone: string[];
   audience: string;
@@ -42,31 +46,12 @@ export interface BookFormData {
   authorNotes: string;
 }
 
-// Pre-defined options for genres, styles, and tones
-const genreOptions = [
-  "Fantasy", "Science Fiction", "Mystery", "Thriller", "Romance", 
-  "Horror", "Historical Fiction", "Adventure", "Literary Fiction", 
-  "Young Adult", "Children's Fiction", "Memoir", "Biography", 
-  "Self-Help", "Business", "Comedy", "Drama", "Poetry", "Folklore"
-];
-
-const styleOptions = [
-  "Descriptive", "Narrative", "Conversational", "Lyrical", "Minimalist", 
-  "Poetic", "Technical", "Academic", "Journalistic", "Stream of Consciousness", 
-  "Satirical", "Expository", "Persuasive", "Formal", "Casual"
-];
-
-const toneOptions = [
-  "Serious", "Humorous", "Inspirational", "Skeptical", "Nostalgic", 
-  "Optimistic", "Pessimistic", "Suspenseful", "Romantic", "Educational", 
-  "Dramatic", "Whimsical", "Ironic", "Melancholic", "Uplifting"
-];
-
 // Default form values
 const defaultFormData: BookFormData = {
   title: "",
   description: "",
   genre: ["Fantasy"],
+  subGenre: [],
   style: ["Descriptive"],
   tone: ["Optimistic"],
   audience: "Young Adults",
@@ -77,9 +62,6 @@ const defaultFormData: BookFormData = {
 
 const BookForm = ({ onSubmit, isGenerating }: BookFormProps) => {
   const [formData, setFormData] = useState<BookFormData>(defaultFormData);
-  const [genreInput, setGenreInput] = useState("");
-  const [styleInput, setStyleInput] = useState("");
-  const [toneInput, setToneInput] = useState("");
 
   // Handle text input changes
   const handleChange = (
@@ -95,21 +77,16 @@ const BookForm = ({ onSubmit, isGenerating }: BookFormProps) => {
   };
 
   // Handle adding and removing tags
-  const addTag = (tag: string, field: "genre" | "style" | "tone") => {
+  const addTag = (tag: string, field: "genre" | "subGenre" | "style" | "tone") => {
     if (tag && !formData[field].includes(tag)) {
       setFormData((prev) => ({
         ...prev,
         [field]: [...prev[field], tag],
       }));
     }
-
-    // Reset the input field
-    if (field === "genre") setGenreInput("");
-    if (field === "style") setStyleInput("");
-    if (field === "tone") setToneInput("");
   };
 
-  const removeTag = (tag: string, field: "genre" | "style" | "tone") => {
+  const removeTag = (tag: string, field: "genre" | "subGenre" | "style" | "tone") => {
     setFormData((prev) => ({
       ...prev,
       [field]: prev[field].filter((t) => t !== tag),
@@ -179,24 +156,25 @@ const BookForm = ({ onSubmit, isGenerating }: BookFormProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Genre Selection */}
-          <div className="space-y-2">
-            <Label>Genre(s)</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.genre.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-sm py-1">
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag, "genre")}
-                    className="ml-2"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
+          {/* Genre and Sub-Genre Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Genre Selection */}
+            <div className="space-y-2">
+              <Label>Genre(s)</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.genre.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-sm py-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag, "genre")}
+                      className="ml-2"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
               <Select
                 onValueChange={(value) => {
                   if (value && !formData.genre.includes(value)) {
@@ -209,36 +187,87 @@ const BookForm = ({ onSubmit, isGenerating }: BookFormProps) => {
                   <SelectValue placeholder="Select genre" />
                 </SelectTrigger>
                 <SelectContent>
-                  {genreOptions
-                    .filter((genre) => !formData.genre.includes(genre))
-                    .map((genre) => (
-                      <SelectItem key={genre} value={genre}>
-                        {genre}
-                      </SelectItem>
-                    ))}
+                  {genreCategories.map((category) => (
+                    <SelectGroup key={category.label}>
+                      <SelectLabel>{category.label}</SelectLabel>
+                      {category.options
+                        .filter((genre) => !formData.genre.includes(genre))
+                        .map((genre) => (
+                          <SelectItem key={genre} value={genre}>
+                            {genre}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sub-Genre Selection */}
+            <div className="space-y-2">
+              <Label>Sub-Genre(s)</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.subGenre.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-sm py-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag, "subGenre")}
+                      className="ml-2"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <Select
+                onValueChange={(value) => {
+                  if (value && !formData.subGenre.includes(value)) {
+                    addTag(value, "subGenre");
+                  }
+                }}
+                value=""
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select sub-genre" />
+                </SelectTrigger>
+                <SelectContent>
+                  {genreCategories.map((category) => (
+                    <SelectGroup key={category.label}>
+                      <SelectLabel>{category.label}</SelectLabel>
+                      {category.options
+                        .filter((genre) => !formData.subGenre.includes(genre))
+                        .map((genre) => (
+                          <SelectItem key={genre} value={genre}>
+                            {genre}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Writing Style Selection */}
-          <div className="space-y-2">
-            <Label>Writing Style(s)</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.style.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-sm py-1">
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag, "style")}
-                    className="ml-2"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
+          {/* Writing Style and Tone Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Writing Style Selection */}
+            <div className="space-y-2">
+              <Label>Writing Style(s)</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.style.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-sm py-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag, "style")}
+                      className="ml-2"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
               <Select
                 onValueChange={(value) => {
                   if (value && !formData.style.includes(value)) {
@@ -261,26 +290,24 @@ const BookForm = ({ onSubmit, isGenerating }: BookFormProps) => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          {/* Tone Selection */}
-          <div className="space-y-2">
-            <Label>Tone(s)</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.tone.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-sm py-1">
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag, "tone")}
-                    className="ml-2"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
+            {/* Tone Selection */}
+            <div className="space-y-2">
+              <Label>Tone(s)</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.tone.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-sm py-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag, "tone")}
+                      className="ml-2"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
               <Select
                 onValueChange={(value) => {
                   if (value && !formData.tone.includes(value)) {

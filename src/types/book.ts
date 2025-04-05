@@ -1,4 +1,3 @@
-
 export interface BookFormatOptions {
   fontFamily: string;
   fontSize: string;
@@ -32,4 +31,17 @@ export interface ParsedBook {
     title: string;
     content: string;
   }[];
+}
+
+export interface BookFormData {
+  title: string;
+  description: string;
+  genre: string[];
+  subGenre: string[];
+  style: string[];
+  tone: string[];
+  audience: string;
+  chapterCount: number;
+  maxWordsPerChapter: number;
+  authorNotes: string;
 }
