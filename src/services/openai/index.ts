@@ -1,10 +1,11 @@
 
 import { BookParams, OpenAIResponse } from './types';
-import { buildPrompt } from './promptBuilder';
 import { generateSampleBook } from './fallbackGenerator';
+import { buildPrompt } from './promptBuilder';
 import { callOpenAIAPI } from './apiClient';
 
-export { BookParams, OpenAIResponse } from './types';
+// Re-export types with proper syntax for isolatedModules
+export type { BookParams, OpenAIResponse } from './types';
 
 export const generateBook = async (
   params: BookParams,
