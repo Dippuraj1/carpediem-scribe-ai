@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Edit } from "lucide-react";
 import { exportToDocx, exportToPdf, exportToGoogleDocs, defaultFormatOptions } from "@/utils/exporters";
 import { calculateBookStats, parseBookContent } from "@/utils/formatters";
-import BookEditor from "@/components/BookEditor";
+import BookEditor from "@/components/book-editor/BookEditor";
 import { BookFormatOptions } from "@/types/book";
 import { useToast } from "@/hooks/use-toast";
 import BookStats from "@/components/book-preview/BookStats";
