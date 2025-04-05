@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, RefreshCw } from "lucide-react";
+import { Save, RefreshCw, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BookEditorProps {
@@ -46,12 +46,29 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
     });
   };
 
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(editedContent);
+    toast({
+      title: "Copied to Clipboard",
+      description: "Book content has been copied to your clipboard.",
+    });
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex justify-between items-center">
           <span>Book Editor</span>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleCopyToClipboard}
+              className="flex items-center gap-1"
+            >
+              <Copy className="h-4 w-4" />
+              Copy
+            </Button>
             {isEditing && (
               <>
                 <Button 

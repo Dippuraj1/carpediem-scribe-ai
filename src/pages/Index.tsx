@@ -6,6 +6,16 @@ import AppHeader from "@/components/AppHeader";
 import Intro from "@/components/Intro";
 import { generateBook } from "@/services/openai";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import ApiKeyInput from "@/components/ApiKeyInput";
 
 const Index = () => {
   const { toast } = useToast();
@@ -13,6 +23,8 @@ const Index = () => {
   const [bookContent, setBookContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<BookFormData | null>(null);
 
   // Load API key from localStorage on component mount
   useEffect(() => {
@@ -33,16 +45,41 @@ const Index = () => {
     setApiKey(key);
   };
 
-  const handleFormSubmit = async (formData: BookFormData) => {
-    if (!apiKey) {
+  const handleApiKeySubmit = () => {
+    if (!apiKey.trim()) {
       toast({
         title: "API Key Required",
-        description: "Please enter your OpenAI API key in Settings.",
+        description: "Please enter your OpenAI API key to continue.",
         variant: "destructive",
       });
       return;
     }
 
+    // Save the API key
+    localStorage.setItem("openai_api_key", apiKey);
+    
+    // Close the dialog
+    setShowApiKeyDialog(false);
+    
+    // If we have pending form data, proceed with generation
+    if (pendingFormData) {
+      proceedWithBookGeneration(pendingFormData);
+      setPendingFormData(null);
+    }
+  };
+
+  const handleFormSubmit = async (formData: BookFormData) => {
+    if (!apiKey) {
+      // Store the form data and show the API key dialog
+      setPendingFormData(formData);
+      setShowApiKeyDialog(true);
+      return;
+    }
+
+    proceedWithBookGeneration(formData);
+  };
+
+  const proceedWithBookGeneration = async (formData: BookFormData) => {
     setIsGenerating(true);
 
     try {
@@ -142,6 +179,32 @@ const Index = () => {
           </p>
         </div>
       </footer>
+
+      {/* API Key Dialog */}
+      <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>OpenAI API Key Required</DialogTitle>
+            <DialogDescription>
+              To generate your book, please provide your OpenAI API key. Your key is stored
+              locally and never sent to our servers.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <ApiKeyInput apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowApiKeyDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleApiKeySubmit} className="bg-carpediem-primary hover:bg-carpediem-primary/90">
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
