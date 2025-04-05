@@ -1,5 +1,5 @@
 
-interface GenreCategory {
+export interface GenreCategory {
   label: string;
   options: string[];
 }

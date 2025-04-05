@@ -1,14 +1,14 @@
 
 import React from "react";
 import FormSection from "./FormSection";
-import TagSelector from "./TagSelector";
+import TagSelector, { GenreCategory } from "./TagSelector";
 
 interface StyleToneSectionProps {
   genre: string[];
   subGenre: string[];
   style: string[];
   tone: string[];
-  genreCategories: { label: string; options: string[] }[];
+  genreCategories: GenreCategory[];
   styleOptions: string[];
   toneOptions: string[];
   onAddTag: (tag: string, field: "genre" | "subGenre" | "style" | "tone") => void;
@@ -40,6 +40,7 @@ const StyleToneSection = ({
           onAddTag={(value) => onAddTag(value, "genre")}
           onRemoveTag={(value) => onRemoveTag(value, "genre")}
           placeholder="Select genre"
+          type="genre"
         />
 
         <TagSelector
@@ -49,6 +50,8 @@ const StyleToneSection = ({
           onAddTag={(value) => onAddTag(value, "subGenre")}
           onRemoveTag={(value) => onRemoveTag(value, "subGenre")}
           placeholder="Select sub-genre"
+          type="subgenre"
+          selectedGenres={genre}
         />
       </div>
 
