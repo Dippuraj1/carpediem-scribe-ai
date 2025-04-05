@@ -5,9 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Book, FileText, Download, FileCheck, Edit } from "lucide-react";
-import { exportToDocx, exportToPdf, exportToGoogleDocs } from "@/utils/exporters";
+import { exportToDocx, exportToPdf, exportToGoogleDocs, defaultFormatOptions } from "@/utils/exporters";
 import { calculateBookStats, parseBookContent } from "@/utils/formatters";
 import BookEditor from "@/components/BookEditor";
+import { BookFormatOptions } from "@/types/book";
 
 interface BookPreviewProps {
   bookContent: string;
@@ -18,6 +19,8 @@ interface BookPreviewProps {
 const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps) => {
   const [activeTab, setActiveTab] = useState("preview");
   const [currentContent, setCurrentContent] = useState(bookContent);
+  const [formatOptions, setFormatOptions] = useState<BookFormatOptions>(defaultFormatOptions);
+  
   const { title } = parseBookContent(currentContent);
   const { wordCount, chapterCount, estimatedReadingTime } = calculateBookStats(currentContent);
 
@@ -28,16 +31,20 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
     }
   };
 
+  const handleFormatOptionsUpdate = (options: BookFormatOptions) => {
+    setFormatOptions(options);
+  };
+
   const handleDownloadDocx = async () => {
-    await exportToDocx(currentContent, title || "book");
+    await exportToDocx(currentContent, title || "book", formatOptions);
   };
 
   const handleDownloadPdf = async () => {
-    await exportToPdf(currentContent, title || "book");
+    await exportToPdf(currentContent, title || "book", formatOptions);
   };
 
   const handleExportToGoogleDocs = async () => {
-    await exportToGoogleDocs(currentContent, title || "book");
+    await exportToGoogleDocs(currentContent, title || "book", formatOptions);
   };
 
   return (
@@ -91,7 +98,13 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
             <CardContent className="p-6">
               <div 
                 className="book-content whitespace-pre-line"
-                style={{ maxHeight: "600px", overflowY: "auto" }}
+                style={{ 
+                  maxHeight: "600px", 
+                  overflowY: "auto",
+                  fontFamily: formatOptions.fontFamily,
+                  fontSize: formatOptions.fontSize,
+                  lineHeight: formatOptions.lineSpacing
+                }}
               >
                 {currentContent}
               </div>
@@ -111,6 +124,10 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
             <CardContent className="p-6">
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold mb-4">Download Options</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Your book will be formatted according to professional publishing standards. 
+                  You can customize the formatting options in the Edit tab.
+                </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="border border-muted p-4 cursor-pointer hover:bg-muted/50 transition-colors">
