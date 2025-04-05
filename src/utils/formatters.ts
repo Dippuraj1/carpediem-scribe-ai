@@ -37,9 +37,18 @@ export const parseBookContent = (content: string) => {
     };
   }
   
-  // Extract the book title
+  // Extract the book title - either from explicit "Book Title:" or from first line if it doesn't start with "Chapter"
+  let title = 'Untitled Book';
   const titleMatch = content.match(/Book Title: ([^\n]+)/);
-  const title = titleMatch ? titleMatch[1] : 'Untitled Book';
+  if (titleMatch) {
+    title = titleMatch[1];
+  } else {
+    // Check if the first line might be the title (not a chapter heading)
+    const firstLine = content.split('\n')[0].trim();
+    if (firstLine && !firstLine.startsWith('Chapter')) {
+      title = firstLine;
+    }
+  }
   
   // Extract the table of contents
   const tocStartIndex = content.indexOf('Table of Contents');
@@ -69,6 +78,16 @@ export const parseBookContent = (content: string) => {
       number: chapterNumber,
       title: chapterTitle,
       content: chapterContent
+    });
+  }
+  
+  // If no chapters were found but there is content, create a default chapter
+  if (chapters.length === 0 && content.trim()) {
+    // If the content doesn't have chapter headings, treat the whole content as chapter 1
+    chapters.push({
+      number: 1,
+      title: 'Introduction',
+      content: content.trim()
     });
   }
   

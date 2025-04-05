@@ -11,6 +11,7 @@ import { Save, RefreshCw, Copy, Settings, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BookFormatOptions } from "@/types/book";
 import { defaultFormatOptions } from "@/utils/exporters";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface BookEditorProps {
   bookContent: string;
@@ -148,9 +149,14 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
                       <SelectValue placeholder="Select font family" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='Georgia, "Times New Roman", serif'>Georgia</SelectItem>
-                      <SelectItem value='Garamond, "Times New Roman", serif'>Garamond</SelectItem>
-                      <SelectItem value='"Times New Roman", serif'>Times New Roman</SelectItem>
+                      <ScrollArea className="h-[200px]">
+                        <SelectItem value='Georgia, "Times New Roman", serif'>Georgia</SelectItem>
+                        <SelectItem value='Garamond, "Times New Roman", serif'>Garamond</SelectItem>
+                        <SelectItem value='"Times New Roman", serif'>Times New Roman</SelectItem>
+                        <SelectItem value='"Palatino Linotype", "Book Antiqua", Palatino, serif'>Palatino</SelectItem>
+                        <SelectItem value='"Bookman Old Style", serif'>Bookman</SelectItem>
+                        <SelectItem value='"Baskerville", serif'>Baskerville</SelectItem>
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>
@@ -165,10 +171,13 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
                       <SelectValue placeholder="Select font size" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="11pt">11pt</SelectItem>
-                      <SelectItem value="12pt">12pt</SelectItem>
-                      <SelectItem value="13pt">13pt</SelectItem>
-                      <SelectItem value="14pt">14pt</SelectItem>
+                      <ScrollArea className="h-[200px]">
+                        <SelectItem value="10pt">10pt</SelectItem>
+                        <SelectItem value="11pt">11pt</SelectItem>
+                        <SelectItem value="12pt">12pt</SelectItem>
+                        <SelectItem value="13pt">13pt</SelectItem>
+                        <SelectItem value="14pt">14pt</SelectItem>
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>
@@ -183,10 +192,12 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
                       <SelectValue placeholder="Select line spacing" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Single</SelectItem>
-                      <SelectItem value="1.15">1.15</SelectItem>
-                      <SelectItem value="1.5">1.5</SelectItem>
-                      <SelectItem value="2">Double</SelectItem>
+                      <ScrollArea className="h-[200px]">
+                        <SelectItem value="1">Single</SelectItem>
+                        <SelectItem value="1.15">1.15</SelectItem>
+                        <SelectItem value="1.5">1.5</SelectItem>
+                        <SelectItem value="2">Double</SelectItem>
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>
@@ -199,14 +210,23 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
                   <Label htmlFor="pageSize">Page Size</Label>
                   <Select 
                     value={formatOptions.pageSize}
-                    onValueChange={(value) => updateFormatOption('pageSize', value)}
+                    onValueChange={(value: any) => updateFormatOption('pageSize', value)}
                   >
                     <SelectTrigger id="pageSize">
                       <SelectValue placeholder="Select page size" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="A4">A4</SelectItem>
-                      <SelectItem value="Letter">US Letter</SelectItem>
+                      <ScrollArea className="h-[200px]">
+                        <SelectItem value="A4">A4 (210 × 297 mm)</SelectItem>
+                        <SelectItem value="Letter">US Letter (8.5 × 11 in)</SelectItem>
+                        <SelectItem value="A5">A5 (148 × 210 mm)</SelectItem>
+                        <SelectItem value="B5">B5 (176 × 250 mm)</SelectItem>
+                        <SelectItem value="Pocket">Pocket (4.25 × 6.87 in)</SelectItem>
+                        <SelectItem value="Digest">Digest (5.5 × 8.5 in)</SelectItem>
+                        <SelectItem value="Trade">Trade (6 × 9 in)</SelectItem>
+                        <SelectItem value="Royal">Royal (6.14 × 9.21 in)</SelectItem>
+                        <SelectItem value="Crown">Crown (7.5 × 10.25 in)</SelectItem>
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>
@@ -221,9 +241,12 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
                       <SelectValue placeholder="Select margins" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0.75in">Narrow (0.75 inch)</SelectItem>
-                      <SelectItem value="1in">Normal (1 inch)</SelectItem>
-                      <SelectItem value="1.25in">Wide (1.25 inch)</SelectItem>
+                      <ScrollArea className="h-[200px]">
+                        <SelectItem value="0.75in">Narrow (0.75 inch)</SelectItem>
+                        <SelectItem value="1in">Normal (1 inch)</SelectItem>
+                        <SelectItem value="1.25in">Wide (1.25 inch)</SelectItem>
+                        <SelectItem value="1.5in">Very Wide (1.5 inch)</SelectItem>
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>

@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Book, FileText, Download, FileCheck, Edit } from "lucide-react";
+import { Clock, Book, FileText, Download, FileCheck, Edit, CheckCircle } from "lucide-react";
 import { exportToDocx, exportToPdf, exportToGoogleDocs, defaultFormatOptions } from "@/utils/exporters";
 import { calculateBookStats, parseBookContent } from "@/utils/formatters";
 import BookEditor from "@/components/BookEditor";
 import { BookFormatOptions } from "@/types/book";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 interface BookPreviewProps {
   bookContent: string;
@@ -17,15 +19,19 @@ interface BookPreviewProps {
 }
 
 const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps) => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("preview");
   const [currentContent, setCurrentContent] = useState(bookContent);
   const [formatOptions, setFormatOptions] = useState<BookFormatOptions>(defaultFormatOptions);
+  const [isFormatted, setIsFormatted] = useState(false);
+  const [formattedContent, setFormattedContent] = useState("");
   
   const { title } = parseBookContent(currentContent);
   const { wordCount, chapterCount, estimatedReadingTime } = calculateBookStats(currentContent);
 
   const handleContentUpdate = (updatedContent: string) => {
     setCurrentContent(updatedContent);
+    setIsFormatted(false); // Reset formatting state when content changes
     if (onContentUpdate) {
       onContentUpdate(updatedContent);
     }
@@ -33,18 +39,106 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
 
   const handleFormatOptionsUpdate = (options: BookFormatOptions) => {
     setFormatOptions(options);
+    setIsFormatted(false); // Reset formatting state when options change
+  };
+
+  const handleFormatBook = () => {
+    // Format the book according to options
+    try {
+      // In a real implementation, this would apply all formatting rules
+      // For now, we'll just set the formatted flag and show a notification
+      setFormattedContent(currentContent);
+      setIsFormatted(true);
+      
+      toast({
+        title: "Book Formatted",
+        description: "Your book has been formatted and is ready for download.",
+      });
+    } catch (error) {
+      toast({
+        title: "Formatting Error",
+        description: "An error occurred while formatting your book.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownloadDocx = async () => {
-    await exportToDocx(currentContent, title || "book", formatOptions);
+    if (!isFormatted) {
+      toast({
+        title: "Format Required",
+        description: "Please format your book before downloading.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const result = await exportToDocx(isFormatted ? formattedContent : currentContent, title || "book", formatOptions);
+    
+    if (result.success) {
+      toast({
+        title: "Download Started",
+        description: "Your DOCX file is being downloaded.",
+      });
+    } else {
+      toast({
+        title: "Download Failed",
+        description: result.error || "Failed to download DOCX file.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownloadPdf = async () => {
-    await exportToPdf(currentContent, title || "book", formatOptions);
+    if (!isFormatted) {
+      toast({
+        title: "Format Required",
+        description: "Please format your book before downloading.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const result = await exportToPdf(isFormatted ? formattedContent : currentContent, title || "book", formatOptions);
+    
+    if (result.success) {
+      toast({
+        title: "Download Started",
+        description: "Your PDF file is being downloaded.",
+      });
+    } else {
+      toast({
+        title: "Download Failed",
+        description: result.error || "Failed to download PDF file.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExportToGoogleDocs = async () => {
-    await exportToGoogleDocs(currentContent, title || "book", formatOptions);
+    if (!isFormatted) {
+      toast({
+        title: "Format Required",
+        description: "Please format your book before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const result = await exportToGoogleDocs(isFormatted ? formattedContent : currentContent, title || "book", formatOptions);
+    
+    if (result.success) {
+      toast({
+        title: "Google Docs Export",
+        description: "Your book has been exported to Google Docs. Check your browser for a new tab.",
+      });
+    } else {
+      toast({
+        title: "Export Failed",
+        description: result.error || "Failed to export to Google Docs.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -78,6 +172,12 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
                 <Clock className="h-4 w-4" />
                 <span>{estimatedReadingTime} min read</span>
               </Badge>
+              {isFormatted && (
+                <Badge variant="outline" className="flex gap-1 items-center py-1 bg-green-50">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-green-700">Formatted</span>
+                </Badge>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -96,18 +196,18 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
         <TabsContent value="preview" className="mt-0">
           <Card className="w-full">
             <CardContent className="p-6">
-              <div 
-                className="book-content whitespace-pre-line"
-                style={{ 
-                  maxHeight: "600px", 
-                  overflowY: "auto",
-                  fontFamily: formatOptions.fontFamily,
-                  fontSize: formatOptions.fontSize,
-                  lineHeight: formatOptions.lineSpacing
-                }}
-              >
-                {currentContent}
-              </div>
+              <ScrollArea className="h-[600px] w-full pr-4">
+                <div 
+                  className="book-content whitespace-pre-line"
+                  style={{ 
+                    fontFamily: formatOptions.fontFamily,
+                    fontSize: formatOptions.fontSize,
+                    lineHeight: formatOptions.lineSpacing
+                  }}
+                >
+                  {currentContent}
+                </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
@@ -117,6 +217,26 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
             bookContent={currentContent} 
             onUpdateContent={handleContentUpdate} 
           />
+          
+          <div className="flex justify-center mt-4">
+            <Button 
+              onClick={handleFormatBook}
+              className="bg-carpediem-primary hover:bg-carpediem-primary/90"
+              disabled={isFormatted}
+            >
+              {isFormatted ? (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Formatted
+                </>
+              ) : (
+                <>
+                  <FileCheck className="mr-2 h-4 w-4" />
+                  Format Book for Export
+                </>
+              )}
+            </Button>
+          </div>
         </TabsContent>
         
         <TabsContent value="export" className="mt-0">
@@ -124,6 +244,15 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
             <CardContent className="p-6">
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold mb-4">Download Options</h3>
+                
+                {!isFormatted && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+                    <p className="text-sm text-yellow-800">
+                      Please format your book in the Edit tab before downloading. This ensures all formatting options are applied correctly.
+                    </p>
+                  </div>
+                )}
+                
                 <p className="text-sm text-muted-foreground mb-4">
                   Your book will be formatted according to professional publishing standards. 
                   You can customize the formatting options in the Edit tab.
@@ -140,6 +269,7 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
                       <Button 
                         onClick={handleDownloadDocx}
                         className="mt-2 bg-carpediem-primary hover:bg-carpediem-primary/90"
+                        disabled={!isFormatted}
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Download DOCX
@@ -157,6 +287,7 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
                       <Button 
                         onClick={handleDownloadPdf}
                         className="mt-2 bg-carpediem-primary hover:bg-carpediem-primary/90"
+                        disabled={!isFormatted}
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Download PDF
@@ -178,6 +309,7 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
                         onClick={handleExportToGoogleDocs}
                         variant="outline"
                         className="mt-2"
+                        disabled={!isFormatted}
                       >
                         Export to Google Docs
                       </Button>

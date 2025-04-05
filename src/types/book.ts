@@ -9,7 +9,7 @@ export interface BookFormatOptions {
   paragraphIndent: string;
   paragraphSpacing: string;
   margins: string;
-  pageSize: 'A4' | 'Letter';
+  pageSize: string; // Changed from enum to string to allow more book sizes
   alignBody: 'justify' | 'left';
   startChaptersNewPage: boolean;
   chapterHeadingStyle: 'centered' | 'left-aligned';
