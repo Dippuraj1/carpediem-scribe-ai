@@ -14,6 +14,7 @@ const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<BookFormData | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const savedApiKey = localStorage.getItem("openai_api_key");
@@ -45,11 +46,17 @@ const Index = () => {
     localStorage.setItem("openai_api_key", apiKey);
     
     setShowApiKeyDialog(false);
-    
-    if (pendingFormData) {
-      // We'll handle this through the GenerationHandler component
-      setPendingFormData(null);
+  };
+
+  const handleFormSubmit = (formData: BookFormData) => {
+    if (!apiKey) {
+      setPendingFormData(formData);
+      setShowApiKeyDialog(true);
+      return;
     }
+    
+    // If we have an API key, proceed with generation
+    setPendingFormData(formData);
   };
 
   return (
@@ -60,19 +67,10 @@ const Index = () => {
         <ContentView 
           showIntro={showIntro}
           bookContent={bookContent}
-          isGenerating={false}
+          isGenerating={isGenerating}
           onShowIntroChange={setShowIntro}
           onBookContentChange={setBookContent}
-          onFormSubmit={(formData) => {
-            if (!apiKey) {
-              setPendingFormData(formData);
-              setShowApiKeyDialog(true);
-              return;
-            }
-            
-            // Pass to GenerationHandler
-            setPendingFormData(formData);
-          }}
+          onFormSubmit={handleFormSubmit}
         />
       </main>
 
@@ -98,6 +96,7 @@ const Index = () => {
         onBookContent={setBookContent}
         onShowApiKeyDialog={() => setShowApiKeyDialog(true)}
         setPendingFormData={setPendingFormData}
+        pendingFormData={pendingFormData}
       />
     </div>
   );

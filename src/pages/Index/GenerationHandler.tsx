@@ -9,7 +9,8 @@ interface GenerationHandlerProps {
   apiKey: string;
   onBookContent: (content: string) => void;
   onShowApiKeyDialog: () => void;
-  setPendingFormData: (data: BookFormData | null) => void;
+  setPendingFormData: React.Dispatch<React.SetStateAction<BookFormData | null>>;
+  pendingFormData: BookFormData | null;
 }
 
 const GenerationHandler = ({
@@ -17,10 +18,19 @@ const GenerationHandler = ({
   onBookContent,
   onShowApiKeyDialog,
   setPendingFormData,
+  pendingFormData,
 }: GenerationHandlerProps) => {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
+
+  // Process pending form data whenever it changes or API key is available
+  useEffect(() => {
+    if (pendingFormData && apiKey) {
+      proceedWithBookGeneration(pendingFormData);
+      setPendingFormData(null);
+    }
+  }, [pendingFormData, apiKey]);
 
   // Add progress simulation when generating
   useEffect(() => {
@@ -54,16 +64,6 @@ const GenerationHandler = ({
       }
     };
   }, [isGenerating]);
-
-  const handleFormSubmit = async (formData: BookFormData) => {
-    if (!apiKey) {
-      setPendingFormData(formData);
-      onShowApiKeyDialog();
-      return;
-    }
-
-    proceedWithBookGeneration(formData);
-  };
 
   const proceedWithBookGeneration = async (formData: BookFormData) => {
     setIsGenerating(true);
@@ -125,12 +125,8 @@ const GenerationHandler = ({
   };
 
   return (
-    <>
-      <GenerationProgress isGenerating={isGenerating} progress={generationProgress} />
-      {handleFormSubmit}
-    </>
+    <GenerationProgress isGenerating={isGenerating} progress={generationProgress} />
   );
 };
 
-export { GenerationHandler, type GenerationHandlerProps };
 export default GenerationHandler;
