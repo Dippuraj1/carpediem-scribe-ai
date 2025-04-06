@@ -23,17 +23,22 @@ const ExportManager = ({ content, formattedContent, isFormatted, formatOptions }
       return;
     }
     
+    toast({
+      title: "Preparing Download",
+      description: "Your DOCX file is being prepared...",
+    });
+    
     const result = await exportToDocx(isFormatted ? formattedContent : content, title || "book", formatOptions);
     
     if (result.success) {
       toast({
         title: "Download Started",
-        description: "Your DOCX file is being downloaded.",
+        description: result.message || "Your file is being downloaded.",
       });
     } else {
       toast({
         title: "Download Failed",
-        description: result.error || "Failed to download DOCX file.",
+        description: result.error || "Failed to download file.",
         variant: "destructive",
       });
     }
@@ -49,17 +54,22 @@ const ExportManager = ({ content, formattedContent, isFormatted, formatOptions }
       return;
     }
     
+    toast({
+      title: "Preparing Download",
+      description: "Your HTML file is being prepared...",
+    });
+    
     const result = await exportToPdf(isFormatted ? formattedContent : content, title || "book", formatOptions);
     
     if (result.success) {
       toast({
         title: "Download Started",
-        description: "Your PDF file is being downloaded.",
+        description: result.message || "Your file is being downloaded.",
       });
     } else {
       toast({
         title: "Download Failed",
-        description: result.error || "Failed to download PDF file.",
+        description: result.error || "Failed to download file.",
         variant: "destructive",
       });
     }

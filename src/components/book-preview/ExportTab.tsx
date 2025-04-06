@@ -41,7 +41,7 @@ const ExportTab = ({
                 <FileCheck className="h-8 w-8 text-carpediem-primary" />
                 <h4 className="font-medium">Microsoft Word (.docx)</h4>
                 <p className="text-sm text-muted-foreground">
-                  Download as a fully formatted Word document
+                  Download as formatted text file with .docx extension
                 </p>
                 <Button 
                   onClick={onDownloadDocx}
@@ -57,9 +57,9 @@ const ExportTab = ({
             <Card className="border border-muted p-4 cursor-pointer hover:bg-muted/50 transition-colors">
               <div className="flex flex-col items-center text-center space-y-2">
                 <FileCheck className="h-8 w-8 text-carpediem-primary" />
-                <h4 className="font-medium">PDF Document (.pdf)</h4>
+                <h4 className="font-medium">HTML File (.html)</h4>
                 <p className="text-sm text-muted-foreground">
-                  Download as a formatted PDF document
+                  Download as HTML file (can be printed to PDF)
                 </p>
                 <Button 
                   onClick={onDownloadPdf}
@@ -67,7 +67,7 @@ const ExportTab = ({
                   disabled={!isFormatted}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Download PDF
+                  Download HTML
                 </Button>
               </div>
             </Card>

@@ -24,10 +24,11 @@ export const exportToDocx = async (content: string, filename: string, options: B
     // Apply formatting to content
     const formattedHTML = createDocxContent(content, options);
     
-    // Create a proper DOCX blob with the correct MIME type
-    // The MIME type for DOCX is application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    // Instead of trying to directly use HTML as a DOCX file,
+    // we need to create a text file with a .docx extension
+    // that contains the formatted content
     const docxBlob = new Blob([formattedHTML], { 
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      type: 'text/plain;charset=utf-8' 
     });
     
     // Trigger download
@@ -48,16 +49,40 @@ export const exportToPdf = async (content: string, filename: string, options: Bo
     // Apply formatting to content
     const formattedHTML = createPdfContent(content, options);
     
-    // Create a proper PDF blob with the correct MIME type
-    // The MIME type for PDF is application/pdf
-    const pdfBlob = new Blob([formattedHTML], { 
-      type: 'application/pdf' 
+    // Instead of directly using HTML as a PDF file,
+    // we create an HTML file that can be printed to PDF manually
+    const htmlBlob = new Blob([`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${filename}</title>
+        <style>
+          @media print {
+            body {
+              font-family: ${options.fontFamily};
+              font-size: ${options.fontSize};
+              line-height: ${options.lineSpacing};
+              padding: 20mm;
+            }
+            @page {
+              size: ${options.pageSize};
+              margin: ${options.margins};
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${formattedHTML}
+      </body>
+      </html>
+    `], { 
+      type: 'text/html;charset=utf-8' 
     });
     
-    // Trigger download
-    downloadFile(pdfBlob, `${filename}.pdf`);
+    // Trigger download of the HTML file, which can be opened in a browser and printed to PDF
+    downloadFile(htmlBlob, `${filename}.html`);
     
-    return { success: true, message: 'Book exported to PDF successfully' };
+    return { success: true, message: 'Book exported to HTML successfully. Please open it in a browser and use Print > Save as PDF.' };
   } catch (error) {
     console.error('Error exporting to PDF:', error);
     return { success: false, error: 'Failed to export to PDF' };
