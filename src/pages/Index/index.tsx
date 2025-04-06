@@ -5,13 +5,12 @@ import { BookFormData } from "@/types/book";
 import { useToast } from "@/hooks/use-toast";
 import ContentView from "./ContentView";
 import ApiKeyDialog from "./ApiKeyDialog";
-import { GenerationHandler } from "./GenerationHandler";
+import GenerationHandler from "./GenerationHandler";
 
 const Index = () => {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState("");
   const [bookContent, setBookContent] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<BookFormData | null>(null);
@@ -48,20 +47,8 @@ const Index = () => {
     setShowApiKeyDialog(false);
     
     if (pendingFormData) {
-      generationHandler.proceedWithBookGeneration(pendingFormData);
+      // We'll handle this through the GenerationHandler component
       setPendingFormData(null);
-    }
-  };
-
-  const generationHandler = {
-    proceedWithBookGeneration: async (formData: BookFormData) => {
-      setIsGenerating(true);
-      try {
-        // This is a placeholder. The actual implementation is in GenerationHandler component
-        // The GenerationHandler component will call this function
-      } finally {
-        setIsGenerating(false);
-      }
     }
   };
 
@@ -73,7 +60,7 @@ const Index = () => {
         <ContentView 
           showIntro={showIntro}
           bookContent={bookContent}
-          isGenerating={isGenerating}
+          isGenerating={false}
           onShowIntroChange={setShowIntro}
           onBookContentChange={setBookContent}
           onFormSubmit={(formData) => {
@@ -82,7 +69,9 @@ const Index = () => {
               setShowApiKeyDialog(true);
               return;
             }
-            generationHandler.proceedWithBookGeneration(formData);
+            
+            // Pass to GenerationHandler
+            setPendingFormData(formData);
           }}
         />
       </main>
@@ -104,7 +93,6 @@ const Index = () => {
         onSubmit={handleApiKeySubmit}
       />
 
-      {/* This component is rendered but its UI is conditionally shown based on isGenerating */}
       <GenerationHandler 
         apiKey={apiKey}
         onBookContent={setBookContent}
