@@ -24,11 +24,14 @@ export const exportToDocx = async (content: string, filename: string, options: B
     // Apply formatting to content
     const formattedHTML = createDocxContent(content, options);
     
-    // For now, we'll use HTML with correct mime type
-    const htmlBlob = new Blob([formattedHTML], { type: 'text/html' });
+    // Create a proper DOCX blob with the correct MIME type
+    // The MIME type for DOCX is application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    const docxBlob = new Blob([formattedHTML], { 
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+    });
     
     // Trigger download
-    downloadFile(htmlBlob, `${filename}.docx`);
+    downloadFile(docxBlob, `${filename}.docx`);
     
     return { success: true, message: 'Book exported to DOCX successfully' };
   } catch (error) {
@@ -45,11 +48,14 @@ export const exportToPdf = async (content: string, filename: string, options: Bo
     // Apply formatting to content
     const formattedHTML = createPdfContent(content, options);
     
-    // Use HTML with correct mime type for PDF
-    const htmlBlob = new Blob([formattedHTML], { type: 'text/html' });
+    // Create a proper PDF blob with the correct MIME type
+    // The MIME type for PDF is application/pdf
+    const pdfBlob = new Blob([formattedHTML], { 
+      type: 'application/pdf' 
+    });
     
     // Trigger download
-    downloadFile(htmlBlob, `${filename}.pdf`);
+    downloadFile(pdfBlob, `${filename}.pdf`);
     
     return { success: true, message: 'Book exported to PDF successfully' };
   } catch (error) {
