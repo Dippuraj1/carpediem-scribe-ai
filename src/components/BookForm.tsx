@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { BookFormData } from "@/types/book";
 import { useToast } from "@/hooks/use-toast";
@@ -27,13 +26,11 @@ import * as z from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 
-// Book form props interface
 interface BookFormProps {
   onSubmit: (params: BookFormData) => void;
   isGenerating: boolean;
 }
 
-// Form schema validation with Zod
 const formSchema = z.object({
   genre: z.string().min(1, "Genre is required"),
   bookType: z.string().min(1, "Book type is required"),
@@ -49,32 +46,27 @@ const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
 });
 
-// Genre options
 const genreOptions = [
   "Fantasy", "Science Fiction", "Mystery", "Thriller", "Romance", "Horror", 
   "Historical Fiction", "Literary Fiction", "Young Adult", "Children's", 
   "Biography", "Memoir", "Self-Help", "Business", "Academic"
 ];
 
-// Book type options
 const bookTypeOptions = [
   "Novel", "Novella", "Short Story", "Anthology", "Guidebook", 
   "Textbook", "Memoir", "Biography", "Poetry Collection", "Cookbook"
 ];
 
-// Language options
 const languageOptions = [
   "English-US", "English-UK", "Spanish", "French", "German", 
   "Mandarin", "Japanese", "Hindi", "Portuguese", "Arabic"
 ];
 
-// Tone & Style options
 const toneStyleOptions = [
   "Dramatic", "Witty", "Poetic", "Academic", "Conversational",
   "Inspirational", "Suspenseful", "Humorous", "Philosophical", "Minimalist"
 ];
 
-// Book dimensions options
 const dimensionsOptions = [
   "6\"x9\" (Standard)", "5.5\"x8.5\" (Trade)", "5\"x8\" (Digest)", 
   "8.5\"x11\" (Letter)", "4.25\"x6.87\" (Mass Market)", "7\"x10\" (Textbook)",
@@ -84,7 +76,6 @@ const dimensionsOptions = [
 const BookForm = ({ onSubmit, isGenerating }: BookFormProps) => {
   const { toast } = useToast();
   
-  // Form definition with react-hook-form and zod validation
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -103,15 +94,14 @@ const BookForm = ({ onSubmit, isGenerating }: BookFormProps) => {
     },
   });
 
-  // Handle form submission
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
-    // Convert form data to BookFormData format
     const bookFormData: BookFormData = {
       title: values.title,
       description: values.contentGoals,
       genre: [values.genre],
+      subGenre: [],
       style: [values.toneStyle],
-      tone: [values.toneStyle], // Using tone/style as both for now
+      tone: [values.toneStyle],
       audience: values.targetAudience,
       chapterCount: values.chapterCount,
       maxWordsPerChapter: Math.floor(values.wordCount / values.chapterCount),
