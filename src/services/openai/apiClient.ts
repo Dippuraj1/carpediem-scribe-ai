@@ -13,19 +13,22 @@ const callOpenAIAPI = async (prompt: string, apiKey: string): Promise<OpenAIResp
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Using a more affordable model with good capabilities
+        model: 'gpt-4o', // Using a more powerful model for better book generation
         messages: [
           {
             role: 'system',
-            content: 'You are an elite creative ghostwriter, literary psychologist, and cinematic storyteller fused into one.'
+            content: 'You are an elite creative ghostwriter, literary psychologist, and cinematic storyteller fused into one. You excel at creating compelling, best-selling books in any genre with rich characters, engaging plots, and commercial appeal.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 4000
+        temperature: 0.8, // Slightly higher temperature for more creativity
+        max_tokens: 8000, // Increased token limit for longer outputs
+        top_p: 0.9,
+        frequency_penalty: 0.2,
+        presence_penalty: 0.2
       })
     });
     

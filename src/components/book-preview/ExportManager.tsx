@@ -32,7 +32,7 @@ const ExportManager = ({ content, formattedContent, isFormatted, formatOptions }
     
     if (result.success) {
       toast({
-        title: "Download Started",
+        title: "Download Ready",
         description: result.message || "Your file is being downloaded.",
       });
     } else {
@@ -56,15 +56,15 @@ const ExportManager = ({ content, formattedContent, isFormatted, formatOptions }
     
     toast({
       title: "Preparing Download",
-      description: "Your HTML file is being prepared...",
+      description: "Your PDF file is being prepared...",
     });
     
     const result = await exportToPdf(isFormatted ? formattedContent : content, title || "book", formatOptions);
     
     if (result.success) {
       toast({
-        title: "Download Started",
-        description: result.message || "Your file is being downloaded.",
+        title: "Download Ready",
+        description: result.message || "Your file is ready to be opened and saved as PDF.",
       });
     } else {
       toast({

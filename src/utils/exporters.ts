@@ -4,110 +4,191 @@ import { defaultFormatOptions } from './formatOptions';
 import { applyFormatting } from './formatHelpers';
 import { downloadFile } from './exportUtils';
 
-// Create DOCX document content (using HTML to DOCX conversion)
-const createDocxContent = (content: string, options: BookFormatOptions) => {
-  // Format book content for DOCX
-  return applyFormatting(content, options);
-};
-
-// Create PDF document content (using HTML to PDF conversion)
-const createPdfContent = (content: string, options: BookFormatOptions) => {
-  // Format book content for PDF
-  return applyFormatting(content, options);
-};
-
-// Export book to DOCX with proper formatting - actually downloads the file
+// Export book to DOCX with proper formatting
 export const exportToDocx = async (content: string, filename: string, options: BookFormatOptions = defaultFormatOptions) => {
   try {
     console.log('Exporting to DOCX with formatting options:', options);
     
-    // Apply formatting to content
-    const formattedHTML = createDocxContent(content, options);
+    // Format the content for DOCX
+    const formattedContent = applyFormatting(content, options);
     
-    // Instead of trying to directly use HTML as a DOCX file,
-    // we need to create a text file with a .docx extension
-    // that contains the formatted content
-    const docxBlob = new Blob([formattedHTML], { 
-      type: 'text/plain;charset=utf-8' 
-    });
+    // Create a well-structured HTML document
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${filename}</title>
+        <style>
+          body {
+            font-family: ${options.fontFamily};
+            font-size: ${options.fontSize};
+            line-height: ${options.lineSpacing};
+            color: ${options.textColor};
+          }
+          h1 {
+            font-size: ${options.titleSize};
+            text-align: center;
+            margin-bottom: 2rem;
+          }
+          h2 {
+            font-size: ${options.subheadingSize};
+            margin-top: 2rem;
+            margin-bottom: 1.5rem;
+          }
+          p {
+            margin-bottom: ${options.paragraphSpacing};
+            text-indent: ${options.paragraphIndent};
+            text-align: ${options.alignBody};
+          }
+        </style>
+      </head>
+      <body>
+        ${formattedContent}
+      </body>
+      </html>
+    `;
     
-    // Trigger download
+    // Create a text blob with the HTML content
+    const docxBlob = new Blob([htmlContent], { type: 'text/html' });
+    
+    // Download the file with a .docx extension
     downloadFile(docxBlob, `${filename}.docx`);
     
-    return { success: true, message: 'Book exported to DOCX successfully' };
+    return { 
+      success: true, 
+      message: 'Book exported successfully. Open in Word or Google Docs to convert formatting.' 
+    };
   } catch (error) {
     console.error('Error exporting to DOCX:', error);
-    return { success: false, error: 'Failed to export to DOCX' };
+    return { 
+      success: false, 
+      error: 'Failed to export to DOCX. Please try again or use a different format.' 
+    };
   }
 };
 
-// Export book to PDF with proper formatting - actually downloads the file
+// Export book to PDF with proper formatting
 export const exportToPdf = async (content: string, filename: string, options: BookFormatOptions = defaultFormatOptions) => {
   try {
     console.log('Exporting to PDF with formatting options:', options);
     
-    // Apply formatting to content
-    const formattedHTML = createPdfContent(content, options);
+    // Format the content for PDF
+    const formattedContent = applyFormatting(content, options);
     
-    // Instead of directly using HTML as a PDF file,
-    // we create an HTML file that can be printed to PDF manually
-    const htmlBlob = new Blob([`
+    // Create a well-structured HTML document for printing to PDF
+    const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
+        <meta charset="UTF-8">
         <title>${filename}</title>
         <style>
+          @page {
+            size: ${options.pageSize};
+            margin: ${options.margins};
+          }
+          body {
+            font-family: ${options.fontFamily};
+            font-size: ${options.fontSize};
+            line-height: ${options.lineSpacing};
+            color: ${options.textColor};
+          }
+          h1 {
+            font-size: ${options.titleSize};
+            text-align: center;
+            margin-bottom: 2rem;
+          }
+          h2 {
+            font-size: ${options.subheadingSize};
+            margin-top: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: ${options.chapterHeadingStyle === 'centered' ? 'center' : 'left'};
+          }
+          p {
+            margin-bottom: ${options.paragraphSpacing};
+            text-indent: ${options.paragraphIndent};
+            text-align: ${options.alignBody};
+          }
+          .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+          }
           @media print {
-            body {
-              font-family: ${options.fontFamily};
-              font-size: ${options.fontSize};
-              line-height: ${options.lineSpacing};
-              padding: 20mm;
-            }
-            @page {
-              size: ${options.pageSize};
-              margin: ${options.margins};
+            .print-button {
+              display: none;
             }
           }
         </style>
       </head>
       <body>
-        ${formattedHTML}
+        <button class="print-button" onclick="window.print()">Save as PDF</button>
+        ${formattedContent}
+        <script>
+          // Instructions alert
+          window.onload = function() {
+            alert("To save as PDF, click the 'Save as PDF' button or use your browser's print function (Ctrl+P or Cmd+P) and select 'Save as PDF' as the destination.");
+          };
+        </script>
       </body>
       </html>
-    `], { 
-      type: 'text/html;charset=utf-8' 
-    });
+    `;
     
-    // Trigger download of the HTML file, which can be opened in a browser and printed to PDF
-    downloadFile(htmlBlob, `${filename}.html`);
+    // Create a HTML blob
+    const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
     
-    return { success: true, message: 'Book exported to HTML successfully. Please open it in a browser and use Print > Save as PDF.' };
+    // Open the HTML in a new tab for printing to PDF
+    const url = URL.createObjectURL(htmlBlob);
+    window.open(url, '_blank');
+    
+    return { 
+      success: true, 
+      message: 'A new tab has opened with your book. Use the "Save as PDF" button or your browser\'s print function to save as PDF.' 
+    };
   } catch (error) {
     console.error('Error exporting to PDF:', error);
-    return { success: false, error: 'Failed to export to PDF' };
+    return { 
+      success: false, 
+      error: 'Failed to export to PDF. Please try again.' 
+    };
   }
 };
 
-// Export to Google Docs with proper formatting - opens in a new window
+// Export to Google Docs
 export const exportToGoogleDocs = async (content: string, filename: string, options: BookFormatOptions = defaultFormatOptions) => {
   try {
     console.log('Exporting to Google Docs with formatting options:', options);
     
-    // Format content for Google Docs
-    const formattedContent = content.replace(/\n/g, '%0A');
+    // Format the content for Google Docs
+    // Google Docs needs plain text without too much formatting for best results
+    const plainText = content.replace(/<[^>]*>/g, '');
     
-    // Create a new Google Docs document with the content
-    // This uses the Google Docs URL scheme to create a new document with the content
-    const url = `https://docs.google.com/document/create?title=${encodeURIComponent(filename)}&body=${encodeURIComponent(formattedContent)}`;
+    // Create a Google Docs URL with the content
+    const encodedContent = encodeURIComponent(plainText);
+    const encodedTitle = encodeURIComponent(filename);
+    const googleDocsUrl = `https://docs.google.com/document/create?title=${encodedTitle}&body=${encodedContent}`;
     
-    // Open the URL in a new tab
-    window.open(url, '_blank');
+    // Open Google Docs in a new tab
+    window.open(googleDocsUrl, '_blank');
     
-    return { success: true, message: 'Exported to Google Docs successfully' };
+    return { 
+      success: true, 
+      message: 'Your book has been exported to Google Docs in a new tab.' 
+    };
   } catch (error) {
     console.error('Error exporting to Google Docs:', error);
-    return { success: false, error: 'Failed to export to Google Docs' };
+    return { 
+      success: false, 
+      error: 'Failed to export to Google Docs. Please try again.' 
+    };
   }
 };
 

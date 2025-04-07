@@ -1,5 +1,5 @@
 
-import { ArrowRight, BookOpen, PencilLine, Save } from "lucide-react";
+import { ArrowRight, BookOpen, PencilLine, Save, Award, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -12,10 +12,10 @@ const Intro = ({ onGetStarted }: IntroProps) => {
     <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 space-y-10">
       <div className="text-center space-y-4">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-          <span className="text-carpediem-primary">Carpediem</span>
+          <span className="text-carpediem-primary">Bestseller</span> Book Architect
         </h1>
         <p className="text-xl md:text-2xl text-carpediem-secondary">
-          Fall in love with writing. Let AI help you author the book you were born to write.
+          Create a high-value, market-ready book manuscript in minutes with AI-powered writing technology.
         </p>
       </div>
 
@@ -25,9 +25,9 @@ const Intro = ({ onGetStarted }: IntroProps) => {
             <div className="bg-carpediem-primary/10 p-3 rounded-full">
               <PencilLine className="h-8 w-8 text-carpediem-primary" />
             </div>
-            <h3 className="text-xl font-semibold">Define Your Book</h3>
+            <h3 className="text-xl font-semibold">Define Your Bestseller</h3>
             <p className="text-muted-foreground">
-              Specify your book's genre, style, tone, and structure with our intuitive form.
+              Specify your book's genre, style, structure, and bestseller elements with our intuitive form.
             </p>
           </CardContent>
         </Card>
@@ -35,11 +35,11 @@ const Intro = ({ onGetStarted }: IntroProps) => {
         <Card>
           <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
             <div className="bg-carpediem-primary/10 p-3 rounded-full">
-              <BookOpen className="h-8 w-8 text-carpediem-primary" />
+              <Sparkles className="h-8 w-8 text-carpediem-primary" />
             </div>
-            <h3 className="text-xl font-semibold">Generate Content</h3>
+            <h3 className="text-xl font-semibold">AI Drafting</h3>
             <p className="text-muted-foreground">
-              Our AI creates a complete book based on your specifications with proper structure.
+              Our AI analyzes bestselling book patterns to create a complete, market-ready manuscript with proper structure.
             </p>
           </CardContent>
         </Card>
@@ -47,14 +47,36 @@ const Intro = ({ onGetStarted }: IntroProps) => {
         <Card>
           <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
             <div className="bg-carpediem-primary/10 p-3 rounded-full">
-              <Save className="h-8 w-8 text-carpediem-primary" />
+              <Award className="h-8 w-8 text-carpediem-primary" />
             </div>
-            <h3 className="text-xl font-semibold">Export & Edit</h3>
+            <h3 className="text-xl font-semibold">Market-Ready Output</h3>
             <p className="text-muted-foreground">
-              Download your book in various formats like DOCX or PDF for further editing.
+              Get a completely formatted book with proven narrative structure, ready for publishing or further editing.
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="bg-carpediem-primary/5 p-6 rounded-lg">
+        <h2 className="text-2xl font-bold text-center mb-4">What You'll Get</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-start space-x-3">
+            <BookOpen className="h-5 w-5 text-carpediem-primary flex-shrink-0 mt-1" />
+            <p>Complete manuscript with proper chapter structure</p>
+          </div>
+          <div className="flex items-start space-x-3">
+            <PencilLine className="h-5 w-5 text-carpediem-primary flex-shrink-0 mt-1" />
+            <p>Engaging characters and plot development</p>
+          </div>
+          <div className="flex items-start space-x-3">
+            <Save className="h-5 w-5 text-carpediem-primary flex-shrink-0 mt-1" />
+            <p>Export options for further editing or publishing</p>
+          </div>
+          <div className="flex items-start space-x-3">
+            <Award className="h-5 w-5 text-carpediem-primary flex-shrink-0 mt-1" />
+            <p>Built-in bestseller narrative techniques</p>
+          </div>
+        </div>
       </div>
 
       <div className="text-center mt-12">
@@ -62,7 +84,7 @@ const Intro = ({ onGetStarted }: IntroProps) => {
           onClick={onGetStarted} 
           className="bg-carpediem-primary hover:bg-carpediem-primary/90 text-white px-8 py-6 rounded-lg text-lg flex items-center gap-2"
         >
-          Get Started
+          Start Creating Your Bestseller
           <ArrowRight className="h-5 w-5" />
         </Button>
       </div>
