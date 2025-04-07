@@ -1,53 +1,226 @@
-
 import { BookFormatOptions } from '../types/book';
 import { defaultFormatOptions } from './formatOptions';
 import { applyFormatting } from './formatHelpers';
 import { downloadFile, ensureDirectoryExists, getSavePath } from './exportUtils';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageOrientation } from 'docx';
+import { parseBookContent } from './formatters';
 
 // Export book to DOCX with proper formatting
 export const exportToDocx = async (content: string, filename: string, options: BookFormatOptions = defaultFormatOptions) => {
   try {
     console.log('Exporting to DOCX with formatting options:', options);
     
-    // Format the content for DOCX
-    const formattedContent = applyFormatting(content, options);
+    // Parse the book content
+    const { title, chapters } = parseBookContent(content);
     
-    // Create a well-structured HTML document
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>${filename}</title>
-        <style>
-          body {
-            font-family: ${options.fontFamily};
-            font-size: ${options.fontSize};
-            line-height: ${options.lineSpacing};
-            color: ${options.textColor};
+    // Create a new document
+    const doc = new Document({
+      title: filename,
+      styles: {
+        paragraphStyles: [
+          {
+            id: 'Normal',
+            name: 'Normal',
+            run: {
+              font: options.fontFamily.split(',')[0].replace(/"/g, ''),
+              size: parseInt(options.fontSize) * 2, // Convert pt to twip (rough estimate)
+              color: options.textColor
+            },
+            paragraph: {
+              spacing: {
+                line: parseInt(String(options.lineSpacing * 240)) // Convert to line spacing in twip
+              }
+            }
+          },
+          {
+            id: 'Heading1',
+            name: 'Heading 1',
+            basedOn: 'Normal',
+            run: {
+              size: parseInt(options.titleSize) * 2,
+              bold: true
+            },
+            paragraph: {
+              alignment: options.chapterHeadingStyle === 'centered' ? AlignmentType.CENTER : AlignmentType.LEFT
+            }
           }
-          h1 {
-            font-size: ${options.titleSize};
-            text-align: center;
-            margin-bottom: 2rem;
+        ]
+      },
+      sections: [{
+        properties: {
+          page: {
+            margin: {
+              top: options.margins,
+              right: options.margins,
+              bottom: options.margins,
+              left: options.margins
+            },
+            size: getPageSizeDimensions(options.pageSize)
           }
-          h2 {
-            font-size: ${options.subheadingSize};
-            margin-top: 2rem;
-            margin-bottom: 1.5rem;
+        },
+        children: []
+      }]
+    });
+
+    // Add title page if needed
+    if (options.includeTitlePage) {
+      const titleSection = doc.sections[0];
+      
+      titleSection.children.push(
+        new Paragraph({
+          text: title,
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+          spacing: {
+            before: 3500, // Add space before title (roughly 30% down the page)
+            after: 800
           }
-          p {
-            margin-bottom: ${options.paragraphSpacing};
-            text-indent: ${options.paragraphIndent};
-            text-align: ${options.alignBody};
+        }),
+        new Paragraph({
+          text: "Author Name", // Placeholder for author
+          alignment: AlignmentType.CENTER,
+          spacing: {
+            before: 400
           }
-        </style>
-      </head>
-      <body>
-        ${formattedContent}
-      </body>
-      </html>
-    `;
+        })
+      );
+      
+      // Add page break after title page
+      titleSection.children.push(
+        new Paragraph({
+          text: "",
+          pageBreakBefore: true
+        })
+      );
+    }
+
+    // Add table of contents if needed
+    if (options.includeTableOfContents) {
+      const tocSection = doc.sections[0];
+      
+      tocSection.children.push(
+        new Paragraph({
+          text: "Table of Contents",
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: {
+            after: 400
+          }
+        })
+      );
+      
+      // Add chapters to TOC
+      chapters.forEach((chapter, index) => {
+        tocSection.children.push(
+          new Paragraph({
+            text: `Chapter ${chapter.number}: ${chapter.title}`,
+            alignment: AlignmentType.LEFT,
+            spacing: {
+              after: 200
+            }
+          })
+        );
+      });
+      
+      // Add page break after TOC
+      tocSection.children.push(
+        new Paragraph({
+          text: "",
+          pageBreakBefore: true
+        })
+      );
+    }
+
+    // Add chapters
+    chapters.forEach((chapter, index) => {
+      const chapterSection = doc.sections[0];
+      
+      // Add chapter heading
+      chapterSection.children.push(
+        new Paragraph({
+          text: `Chapter ${chapter.number}: ${chapter.title}`,
+          heading: HeadingLevel.HEADING_1,
+          alignment: options.chapterHeadingStyle === 'centered' ? AlignmentType.CENTER : AlignmentType.LEFT,
+          spacing: {
+            after: 400
+          }
+        })
+      );
+      
+      // Process chapter content
+      const paragraphs = chapter.content.split('\n\n');
+      paragraphs.forEach(para => {
+        if (para.trim()) {
+          const alignment = options.alignBody === 'justify' ? AlignmentType.JUSTIFIED : AlignmentType.LEFT;
+          
+          // Handle dialogue (text in quotes)
+          if (para.includes('"')) {
+            const paragraph = new Paragraph({
+              alignment,
+              spacing: { after: parseInt(options.paragraphSpacing) * 20 },
+              indent: { firstLine: parseInt(options.paragraphIndent) * 20 }
+            });
+            
+            // Split by quotes to identify dialogue
+            let inQuotes = false;
+            let currentText = '';
+            
+            for (let i = 0; i < para.length; i++) {
+              if (para[i] === '"') {
+                // Add accumulated text with appropriate styling
+                if (currentText) {
+                  paragraph.addChildElement(new TextRun({
+                    text: currentText,
+                    italics: inQuotes
+                  }));
+                  currentText = '';
+                }
+                
+                // Add the quote mark
+                paragraph.addChildElement(new TextRun({ text: '"' }));
+                inQuotes = !inQuotes;
+              } else {
+                currentText += para[i];
+              }
+            }
+            
+            // Add any remaining text
+            if (currentText) {
+              paragraph.addChildElement(new TextRun({
+                text: currentText,
+                italics: inQuotes
+              }));
+            }
+            
+            chapterSection.children.push(paragraph);
+          } else {
+            // Regular paragraph
+            chapterSection.children.push(
+              new Paragraph({
+                text: para,
+                alignment,
+                spacing: { after: parseInt(options.paragraphSpacing) * 20 },
+                indent: { firstLine: parseInt(options.paragraphIndent) * 20 }
+              })
+            );
+          }
+        }
+      });
+      
+      // Add page break after chapter if specified
+      if (options.startChaptersNewPage && index < chapters.length - 1) {
+        chapterSection.children.push(
+          new Paragraph({
+            text: "",
+            pageBreakBefore: true
+          })
+        );
+      }
+    });
+
+    // Create a blob from the docx
+    const buffer = await Packer.toBuffer(doc);
+    const docxBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
     
     // Try to save to the specified directory
     const saveDir = getSavePath();
@@ -56,9 +229,6 @@ export const exportToDocx = async (content: string, filename: string, options: B
     if (directoryExists) {
       console.log(`Saving file to: ${saveDir}\\${filename}.docx`);
     }
-    
-    // Create a text blob with the HTML content
-    const docxBlob = new Blob([htmlContent], { type: 'text/html' });
     
     // Download the file with a .docx extension
     downloadFile(docxBlob, `${filename}.docx`);
@@ -77,7 +247,7 @@ export const exportToDocx = async (content: string, filename: string, options: B
     
     return { 
       success: true, 
-      message: `Book exported successfully to "${saveDir}\\${filename}.docx". Open in Word or Google Docs to convert formatting.` 
+      message: `Book exported successfully to "${saveDir}\\${filename}.docx".` 
     };
   } catch (error) {
     console.error('Error exporting to DOCX:', error);
@@ -87,6 +257,32 @@ export const exportToDocx = async (content: string, filename: string, options: B
     };
   }
 };
+
+// Helper function to get page dimensions from page size string
+function getPageSizeDimensions(pageSize: string) {
+  switch (pageSize) {
+    case 'A4':
+      return { width: 11906, height: 16838 }; // Width: 210mm, Height: 297mm
+    case 'Letter':
+      return { width: 12240, height: 15840 }; // Width: 8.5in, Height: 11in
+    case 'A5':
+      return { width: 8419, height: 11906 }; // Width: 148mm, Height: 210mm
+    case 'B5':
+      return { width: 9978, height: 14170 }; // Width: 176mm, Height: 250mm
+    case 'Pocket':
+      return { width: 6120, height: 9900 }; // Width: 4.25in, Height: 6.87in
+    case 'Digest':
+      return { width: 7920, height: 12240 }; // Width: 5.5in, Height: 8.5in
+    case 'Trade':
+      return { width: 8640, height: 12960 }; // Width: 6in, Height: 9in
+    case 'Royal':
+      return { width: 8842, height: 13262 }; // Width: 6.14in, Height: 9.21in
+    case 'Crown':
+      return { width: 10800, height: 14760 }; // Width: 7.5in, Height: 10.25in
+    default:
+      return { width: 12240, height: 15840 }; // Default to Letter
+  }
+}
 
 // Export book to PDF with proper formatting
 export const exportToPdf = async (content: string, filename: string, options: BookFormatOptions = defaultFormatOptions) => {
