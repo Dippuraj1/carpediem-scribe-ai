@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { BookFormData } from "@/types/book";
 import { useToast } from "@/hooks/use-toast";
@@ -105,6 +106,12 @@ const BookForm = ({ onSubmit, isGenerating }: BookFormProps) => {
       audience: values.targetAudience,
       chapterCount: values.chapterCount,
       maxWordsPerChapter: Math.floor(values.wordCount / values.chapterCount),
+      targetWordCount: values.wordCount,
+      bookType: values.bookType,
+      language: values.language,
+      bookDimensions: values.bookDimensions,
+      inspiration: values.inspiration,
+      additionalNotes: values.additionalNotes,
       authorNotes: `Book Type: ${values.bookType}\nLanguage: ${values.language}\nDimensions: ${values.bookDimensions}\nInspiration: ${values.inspiration}\nAdditional Notes: ${values.additionalNotes}`,
     };
 

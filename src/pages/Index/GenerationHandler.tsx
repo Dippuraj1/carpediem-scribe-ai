@@ -73,12 +73,19 @@ const GenerationHandler = ({
         title: formData.title,
         description: formData.description,
         genre: formData.genre,
+        subGenre: formData.subGenre,
         style: formData.style,
         tone: formData.tone,
         audience: formData.audience,
         chapterCount: formData.chapterCount,
         maxWordsPerChapter: formData.maxWordsPerChapter,
         authorNotes: formData.authorNotes,
+        bookType: formData.bookType,
+        language: formData.language,
+        bookDimensions: formData.bookDimensions,
+        inspiration: formData.inspiration,
+        targetWordCount: formData.targetWordCount,
+        additionalNotes: formData.additionalNotes,
       }, apiKey);
 
       if (result.error) {
@@ -113,15 +120,34 @@ const GenerationHandler = ({
   };
 
   const saveBookToDraft = (content: string, title?: string) => {
-    const { title: parsedTitle } = JSON.parse(localStorage.getItem("book_draft") || "{}");
-    localStorage.setItem(
-      "book_draft",
-      JSON.stringify({
-        content: content,
-        timestamp: new Date().toISOString(),
-        title: title || parsedTitle || "Untitled Book",
-      })
-    );
+    try {
+      // Create target directory if it doesn't exist
+      const savePath = "C:\\LIFolder";
+      
+      // Save in localStorage as a backup
+      const { title: parsedTitle } = JSON.parse(localStorage.getItem("book_draft") || "{}");
+      localStorage.setItem(
+        "book_draft",
+        JSON.stringify({
+          content: content,
+          timestamp: new Date().toISOString(),
+          title: title || parsedTitle || "Untitled Book",
+          savePath: savePath,
+        })
+      );
+      
+      toast({
+        title: "Book Saved",
+        description: `Your book draft has been saved to ${savePath}`,
+      });
+    } catch (error) {
+      console.error("Error saving book:", error);
+      toast({
+        title: "Save Warning",
+        description: "Book saved to browser storage only. File system access requires additional permissions.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

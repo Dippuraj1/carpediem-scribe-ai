@@ -10,12 +10,18 @@ You are an elite creative ghostwriter, literary psychologist, and cinematic stor
 📘 Title: ${params.title}  
 🧠 Description: ${params.description}  
 🎭 Genre(s): ${params.genre.join(', ')}  
+🎭 Sub-Genre(s): ${params.subGenre.join(', ')}
+📚 Book Type: ${params.bookType || 'Not specified'}
 ✍️ Writing Style(s): ${params.style.join(', ')}  
 🎨 Tone(s): ${params.tone.join(', ')}  
 🎯 Target Audience: ${params.audience}  
+🌐 Language: ${params.language || 'English-US'}
+📏 Book Dimensions: ${params.bookDimensions || '6"x9" (Standard)'}
 📚 Chapters: ${params.chapterCount}  
 📝 Max Words Per Chapter: ${params.maxWordsPerChapter}  
-🧾 Author Notes: ${params.authorNotes || 'N/A'}
+📝 Total Target Word Count: ${params.targetWordCount || params.chapterCount * params.maxWordsPerChapter}
+📚 Inspiration/Comparable Books: ${params.inspiration || 'Not specified'}
+🧾 Additional Notes: ${params.additionalNotes || 'N/A'}
 ---
 
 ### ✨ Creative Writing Instructions:

@@ -45,4 +45,10 @@ export interface BookFormData {
   chapterCount: number;
   maxWordsPerChapter: number;
   authorNotes: string;
+  bookType?: string;
+  language?: string;
+  bookDimensions?: string;
+  inspiration?: string;
+  targetWordCount?: number;
+  additionalNotes?: string;
 }
