@@ -35,58 +35,12 @@ export const exportToDocx = async (content: string, filename: string, options: B
     // Convert string margins to proper numeric format
     const marginValue = parseMarginValue(options.margins);
     
-    // Create a new document with appropriate sections
-    const doc = new Document({
-      title: filename,
-      styles: {
-        paragraphStyles: [
-          {
-            id: 'Normal',
-            name: 'Normal',
-            run: {
-              font: options.fontFamily.split(',')[0].replace(/"/g, ''),
-              size: parseInt(options.fontSize) * 2, // Convert pt to twip (rough estimate)
-              color: options.textColor
-            },
-            paragraph: {
-              spacing: {
-                line: parseInt(String(options.lineSpacing * 240)) // Convert to line spacing in twip
-              }
-            }
-          },
-          {
-            id: 'Heading1',
-            name: 'Heading 1',
-            basedOn: 'Normal',
-            run: {
-              size: parseInt(options.titleSize) * 2,
-              bold: true
-            },
-            paragraph: {
-              alignment: options.chapterHeadingStyle === 'centered' ? AlignmentType.CENTER : AlignmentType.LEFT
-            }
-          }
-        ]
-      },
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: marginValue,
-              right: marginValue,
-              bottom: marginValue,
-              left: marginValue
-            },
-            size: getPageSizeDimensions(options.pageSize)
-          }
-        },
-        children: []
-      }]
-    });
-
+    // Create document content
+    let documentElements: Paragraph[] = [];
+    
     // Add title page if needed
     if (options.includeTitlePage) {
-      const titlePageParagraphs = [
+      documentElements.push(
         new Paragraph({
           text: title,
           heading: HeadingLevel.TITLE,
@@ -108,19 +62,12 @@ export const exportToDocx = async (content: string, filename: string, options: B
           text: "",
           pageBreakBefore: true
         })
-      ];
-      
-      // Add title page paragraphs to the document
-      if (doc.sections[0]) {
-        titlePageParagraphs.forEach(paragraph => {
-          doc.sections[0].addChild(paragraph);
-        });
-      }
+      );
     }
 
     // Add table of contents if needed
     if (options.includeTableOfContents) {
-      const tocParagraphs = [
+      documentElements.push(
         new Paragraph({
           text: "Table of Contents",
           heading: HeadingLevel.HEADING_1,
@@ -129,11 +76,11 @@ export const exportToDocx = async (content: string, filename: string, options: B
             after: 400
           }
         })
-      ];
+      );
       
       // Add chapters to TOC
       chapters.forEach((chapter) => {
-        tocParagraphs.push(
+        documentElements.push(
           new Paragraph({
             text: `Chapter ${chapter.number}: ${chapter.title}`,
             alignment: AlignmentType.LEFT,
@@ -145,25 +92,18 @@ export const exportToDocx = async (content: string, filename: string, options: B
       });
       
       // Add page break after TOC
-      tocParagraphs.push(
+      documentElements.push(
         new Paragraph({
           text: "",
           pageBreakBefore: true
         })
       );
-      
-      // Add TOC paragraphs to the document
-      if (doc.sections[0]) {
-        tocParagraphs.forEach(paragraph => {
-          doc.sections[0].addChild(paragraph);
-        });
-      }
     }
 
     // Add chapters to the document
     chapters.forEach((chapter, index) => {
       // Add chapter heading
-      const chapterParagraphs = [
+      documentElements.push(
         new Paragraph({
           text: `Chapter ${chapter.number}: ${chapter.title}`,
           heading: HeadingLevel.HEADING_1,
@@ -172,7 +112,7 @@ export const exportToDocx = async (content: string, filename: string, options: B
             after: 400
           }
         })
-      ];
+      );
       
       // Process chapter content
       const paragraphs = chapter.content.split('\n\n');
@@ -219,10 +159,10 @@ export const exportToDocx = async (content: string, filename: string, options: B
               }));
             }
             
-            chapterParagraphs.push(paragraph);
+            documentElements.push(paragraph);
           } else {
             // Regular paragraph
-            chapterParagraphs.push(
+            documentElements.push(
               new Paragraph({
                 text: para,
                 alignment,
@@ -236,20 +176,62 @@ export const exportToDocx = async (content: string, filename: string, options: B
       
       // Add page break after chapter if specified
       if (options.startChaptersNewPage && index < chapters.length - 1) {
-        chapterParagraphs.push(
+        documentElements.push(
           new Paragraph({
             text: "",
             pageBreakBefore: true
           })
         );
       }
-      
-      // Add chapter paragraphs to the document
-      if (doc.sections[0]) {
-        chapterParagraphs.forEach(paragraph => {
-          doc.sections[0].addChild(paragraph);
-        });
-      }
+    });
+
+    // Create a new document with appropriate sections
+    const doc = new Document({
+      title: filename,
+      styles: {
+        paragraphStyles: [
+          {
+            id: 'Normal',
+            name: 'Normal',
+            run: {
+              font: options.fontFamily.split(',')[0].replace(/"/g, ''),
+              size: parseInt(options.fontSize) * 2, // Convert pt to twip (rough estimate)
+              color: options.textColor
+            },
+            paragraph: {
+              spacing: {
+                line: parseInt(String(options.lineSpacing * 240)) // Convert to line spacing in twip
+              }
+            }
+          },
+          {
+            id: 'Heading1',
+            name: 'Heading 1',
+            basedOn: 'Normal',
+            run: {
+              size: parseInt(options.titleSize) * 2,
+              bold: true
+            },
+            paragraph: {
+              alignment: options.chapterHeadingStyle === 'centered' ? AlignmentType.CENTER : AlignmentType.LEFT
+            }
+          }
+        ]
+      },
+      sections: [{
+        properties: {
+          page: {
+            margin: {
+              top: marginValue,
+              right: marginValue,
+              bottom: marginValue,
+              left: marginValue
+            },
+            size: getPageSizeDimensions(options.pageSize)
+          }
+        },
+        children: documentElements
+      }]
     });
 
     // Create a blob from the docx
