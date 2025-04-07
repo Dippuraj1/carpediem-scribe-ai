@@ -1,8 +1,9 @@
+
 import { BookFormatOptions } from '../types/book';
 import { defaultFormatOptions } from './formatOptions';
 import { applyFormatting } from './formatHelpers';
 import { downloadFile, ensureDirectoryExists, getSavePath } from './exportUtils';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageOrientation } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { parseBookContent } from './formatters';
 
 // Export book to DOCX with proper formatting
@@ -13,8 +14,27 @@ export const exportToDocx = async (content: string, filename: string, options: B
     // Parse the book content
     const { title, chapters } = parseBookContent(content);
     
-    // Convert string margins to proper format (e.g., "1in" instead of just "1")
-    const marginValue = options.margins.includes('in') ? options.margins : `${options.margins}in`;
+    // Parse the margins to valid docx format
+    const parseMarginValue = (margin: string): number => {
+      // Extract number from string like "1in" or "1.5in"
+      const numValue = parseFloat(margin);
+      // Convert to twip (1/20 of a point, 1 inch = 1440 twips)
+      if (margin.includes('in')) {
+        return numValue * 1440;
+      } else if (margin.includes('cm')) {
+        return numValue * 567; // 1 cm ≈ 567 twips
+      } else if (margin.includes('mm')) {
+        return numValue * 56.7; // 1 mm ≈ 56.7 twips
+      } else if (margin.includes('pt')) {
+        return numValue * 20; // 1 pt = 20 twips
+      } else {
+        // Default to inches if no unit specified
+        return numValue * 1440;
+      }
+    };
+    
+    // Convert string margins to proper numeric format
+    const marginValue = parseMarginValue(options.margins);
     
     // Create a new document
     const doc = new Document({
@@ -67,51 +87,54 @@ export const exportToDocx = async (content: string, filename: string, options: B
 
     // Add title page if needed
     if (options.includeTitlePage) {
-      const titleSection = doc.addSection({
-        children: [
-          new Paragraph({
-            text: title,
-            heading: HeadingLevel.TITLE,
-            alignment: AlignmentType.CENTER,
-            spacing: {
-              before: 3500, // Add space before title (roughly 30% down the page)
-              after: 800
-            }
-          }),
-          new Paragraph({
-            text: "Author Name", // Placeholder for author
-            alignment: AlignmentType.CENTER,
-            spacing: {
-              before: 400
-            }
-          }),
-          // Add page break after title page
-          new Paragraph({
-            text: "",
-            pageBreakBefore: true
-          })
-        ]
-      });
+      const titlePageParagraphs = [
+        new Paragraph({
+          text: title,
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+          spacing: {
+            before: 3500, // Add space before title (roughly 30% down the page)
+            after: 800
+          }
+        }),
+        new Paragraph({
+          text: "Author Name", // Placeholder for author
+          alignment: AlignmentType.CENTER,
+          spacing: {
+            before: 400
+          }
+        }),
+        // Add page break after title page
+        new Paragraph({
+          text: "",
+          pageBreakBefore: true
+        })
+      ];
+      
+      // Accessing the first section to add children
+      if (doc.sections[0]) {
+        titlePageParagraphs.forEach(paragraph => {
+          doc.sections[0].addChild(paragraph);
+        });
+      }
     }
 
     // Add table of contents if needed
     if (options.includeTableOfContents) {
-      const tocSection = doc.addSection({
-        children: [
-          new Paragraph({
-            text: "Table of Contents",
-            heading: HeadingLevel.HEADING_1,
-            alignment: AlignmentType.CENTER,
-            spacing: {
-              after: 400
-            }
-          })
-        ]
-      });
+      const tocParagraphs = [
+        new Paragraph({
+          text: "Table of Contents",
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: {
+            after: 400
+          }
+        })
+      ];
       
       // Add chapters to TOC
-      chapters.forEach((chapter, index) => {
-        tocSection.addParagraph(
+      chapters.forEach((chapter) => {
+        tocParagraphs.push(
           new Paragraph({
             text: `Chapter ${chapter.number}: ${chapter.title}`,
             alignment: AlignmentType.LEFT,
@@ -123,22 +146,25 @@ export const exportToDocx = async (content: string, filename: string, options: B
       });
       
       // Add page break after TOC
-      tocSection.addParagraph(
+      tocParagraphs.push(
         new Paragraph({
           text: "",
           pageBreakBefore: true
         })
       );
+      
+      // Add TOC paragraphs to the document
+      if (doc.sections[0]) {
+        tocParagraphs.forEach(paragraph => {
+          doc.sections[0].addChild(paragraph);
+        });
+      }
     }
 
-    // Add chapters
-    const mainSection = doc.addSection({
-      children: []
-    });
-    
+    // Add chapters to the document
     chapters.forEach((chapter, index) => {
       // Add chapter heading
-      mainSection.addParagraph(
+      const chapterParagraphs = [
         new Paragraph({
           text: `Chapter ${chapter.number}: ${chapter.title}`,
           heading: HeadingLevel.HEADING_1,
@@ -147,7 +173,7 @@ export const exportToDocx = async (content: string, filename: string, options: B
             after: 400
           }
         })
-      );
+      ];
       
       // Process chapter content
       const paragraphs = chapter.content.split('\n\n');
@@ -194,10 +220,10 @@ export const exportToDocx = async (content: string, filename: string, options: B
               }));
             }
             
-            mainSection.addParagraph(paragraph);
+            chapterParagraphs.push(paragraph);
           } else {
             // Regular paragraph
-            mainSection.addParagraph(
+            chapterParagraphs.push(
               new Paragraph({
                 text: para,
                 alignment,
@@ -211,12 +237,19 @@ export const exportToDocx = async (content: string, filename: string, options: B
       
       // Add page break after chapter if specified
       if (options.startChaptersNewPage && index < chapters.length - 1) {
-        mainSection.addParagraph(
+        chapterParagraphs.push(
           new Paragraph({
             text: "",
             pageBreakBefore: true
           })
         );
+      }
+      
+      // Add chapter paragraphs to the document
+      if (doc.sections[0]) {
+        chapterParagraphs.forEach(paragraph => {
+          doc.sections[0].addChild(paragraph);
+        });
       }
     });
 
