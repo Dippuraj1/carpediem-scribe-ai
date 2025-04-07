@@ -146,7 +146,7 @@ const GenerationHandler = ({
       toast({
         title: "Save Warning",
         description: "Book saved to browser storage only. Use export options for permanent storage.",
-        variant: "warning",
+        variant: "destructive", // Changed from "warning" to "destructive" as it's one of the allowed variants
       });
     }
   };
