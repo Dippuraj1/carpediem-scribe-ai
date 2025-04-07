@@ -10,7 +10,7 @@ You are an elite creative ghostwriter, literary psychologist, and cinematic stor
 📘 Title: ${params.title}  
 🧠 Description: ${params.description}  
 🎭 Genre(s): ${params.genre.join(', ')}  
-🎭 Sub-Genre(s): ${params.subGenre.join(', ')}
+🎭 Sub-Genre(s): ${params.subGenre?.join(', ') || 'Not specified'}
 📚 Book Type: ${params.bookType || 'Not specified'}
 ✍️ Writing Style(s): ${params.style.join(', ')}  
 🎨 Tone(s): ${params.tone.join(', ')}  

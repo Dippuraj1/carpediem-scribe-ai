@@ -4,7 +4,7 @@ import { calculateBookStats, parseBookContent } from "@/utils/formatters";
 import BookStats from "@/components/book-preview/BookStats";
 import BookPreviewHeader from "@/components/book-preview/BookPreviewHeader";
 import TabsManager from "@/components/book-preview/TabsManager";
-import FormatManager from "@/components/book-preview/FormatManager";
+import { useFormatManager } from "@/hooks/useFormatManager";
 import ExportManager from "@/components/book-preview/ExportManager";
 
 interface BookPreviewProps {
@@ -41,8 +41,8 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
     }
   };
 
-  // Use our format manager
-  const formatManager = FormatManager({
+  // Use our format manager hook
+  const formatManager = useFormatManager({
     content: currentContent,
     onFormatComplete: setFormattedContent
   });

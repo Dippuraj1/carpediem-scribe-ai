@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import GenerationProgress from "@/components/GenerationProgress";
 import { BookFormData } from "@/types/book";
 import { generateBook } from "@/services/openai";
+import { ensureDirectoryExists, getSavePath } from "@/utils/exportUtils";
 
 interface GenerationHandlerProps {
   apiKey: string;
@@ -73,7 +74,7 @@ const GenerationHandler = ({
         title: formData.title,
         description: formData.description,
         genre: formData.genre,
-        subGenre: formData.subGenre,
+        subGenre: formData.subGenre || [],
         style: formData.style,
         tone: formData.tone,
         audience: formData.audience,
@@ -121,31 +122,31 @@ const GenerationHandler = ({
 
   const saveBookToDraft = (content: string, title?: string) => {
     try {
-      // Create target directory if it doesn't exist
-      const savePath = "C:\\LIFolder";
+      // Get the save path and ensure it exists (conceptually)
+      const savePath = getSavePath();
+      ensureDirectoryExists(savePath);
       
       // Save in localStorage as a backup
-      const { title: parsedTitle } = JSON.parse(localStorage.getItem("book_draft") || "{}");
       localStorage.setItem(
         "book_draft",
         JSON.stringify({
           content: content,
           timestamp: new Date().toISOString(),
-          title: title || parsedTitle || "Untitled Book",
+          title: title || "Untitled Book",
           savePath: savePath,
         })
       );
       
       toast({
         title: "Book Saved",
-        description: `Your book draft has been saved to ${savePath}`,
+        description: `Your book draft has been saved and is available in the editor. For offline use, please use the export options.`,
       });
     } catch (error) {
       console.error("Error saving book:", error);
       toast({
         title: "Save Warning",
-        description: "Book saved to browser storage only. File system access requires additional permissions.",
-        variant: "destructive",
+        description: "Book saved to browser storage only. Use export options for permanent storage.",
+        variant: "warning",
       });
     }
   };
