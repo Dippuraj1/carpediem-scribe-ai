@@ -14,6 +14,7 @@ interface TabsManagerProps {
   isFormatted: boolean;
   onContentUpdate: (updatedContent: string) => void;
   onFormatBook: () => void;
+  onUpdateFormatOption: (key: keyof BookFormatOptions, value: any) => void;
   onDownloadDocx: () => void;
   onDownloadPdf: () => void;
   onExportToGoogleDocs: () => void;
@@ -25,6 +26,7 @@ const TabsManager = ({
   isFormatted,
   onContentUpdate,
   onFormatBook,
+  onUpdateFormatOption,
   onDownloadDocx,
   onDownloadPdf,
   onExportToGoogleDocs,
@@ -49,7 +51,9 @@ const TabsManager = ({
       <TabsContent value="editor" className="mt-0">
         <BookEditor 
           bookContent={content} 
-          onUpdateContent={onContentUpdate} 
+          onUpdateContent={onContentUpdate}
+          formatOptions={formatOptions}
+          onUpdateFormatOption={onUpdateFormatOption} 
         />
         
         <div className="flex justify-center mt-4">

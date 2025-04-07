@@ -2,21 +2,7 @@
 import { BookFormatOptions } from '../types/book';
 import { defaultFormatOptions } from './formatOptions';
 import { applyFormatting } from './formatHelpers';
-import { downloadFile } from './exportUtils';
-
-// Helper function to ensure the directory exists
-const ensureDirectoryExists = (dirPath: string) => {
-  try {
-    // Create directory if it doesn't exist
-    // Note: In a web browser context, this won't have direct file system access
-    // This is for future compatibility with Electron or local file APIs
-    console.log(`Ensuring directory exists: ${dirPath}`);
-    return true;
-  } catch (error) {
-    console.error(`Error creating directory: ${dirPath}`, error);
-    return false;
-  }
-};
+import { downloadFile, ensureDirectoryExists, getSavePath } from './exportUtils';
 
 // Export book to DOCX with proper formatting
 export const exportToDocx = async (content: string, filename: string, options: BookFormatOptions = defaultFormatOptions) => {
@@ -63,8 +49,8 @@ export const exportToDocx = async (content: string, filename: string, options: B
       </html>
     `;
     
-    // Try to save to the specified directory first
-    const saveDir = "C:\\LIFolder";
+    // Try to save to the specified directory
+    const saveDir = getSavePath();
     const directoryExists = ensureDirectoryExists(saveDir);
     
     if (directoryExists) {
@@ -76,6 +62,18 @@ export const exportToDocx = async (content: string, filename: string, options: B
     
     // Download the file with a .docx extension
     downloadFile(docxBlob, `${filename}.docx`);
+    
+    // Save information about the download
+    try {
+      localStorage.setItem("last_export", JSON.stringify({
+        type: "docx",
+        title: filename,
+        date: new Date().toISOString(),
+        path: `${saveDir}\\${filename}.docx`
+      }));
+    } catch (error) {
+      console.error("Error saving export information:", error);
+    }
     
     return { 
       success: true, 
@@ -99,7 +97,7 @@ export const exportToPdf = async (content: string, filename: string, options: Bo
     const formattedContent = applyFormatting(content, options);
     
     // Ensure the directory exists
-    const saveDir = "C:\\LIFolder";
+    const saveDir = getSavePath();
     const directoryExists = ensureDirectoryExists(saveDir);
     
     if (directoryExists) {
@@ -185,6 +183,18 @@ export const exportToPdf = async (content: string, filename: string, options: Bo
       </html>
     `;
     
+    // Save information about the download
+    try {
+      localStorage.setItem("last_export", JSON.stringify({
+        type: "pdf",
+        title: filename,
+        date: new Date().toISOString(),
+        path: `${saveDir}\\${filename}.pdf`
+      }));
+    } catch (error) {
+      console.error("Error saving export information:", error);
+    }
+    
     // Create a HTML blob
     const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
     
@@ -218,6 +228,17 @@ export const exportToGoogleDocs = async (content: string, filename: string, opti
     const encodedContent = encodeURIComponent(plainText);
     const encodedTitle = encodeURIComponent(filename);
     const googleDocsUrl = `https://docs.google.com/document/create?title=${encodedTitle}&body=${encodedContent}`;
+    
+    // Save information about the export
+    try {
+      localStorage.setItem("last_export", JSON.stringify({
+        type: "google_docs",
+        title: filename,
+        date: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error("Error saving export information:", error);
+    }
     
     // Open Google Docs in a new tab
     window.open(googleDocsUrl, '_blank');

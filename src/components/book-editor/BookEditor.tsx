@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BookFormatOptions } from "@/types/book";
-import { defaultFormatOptions } from "@/utils/exporters";
 
 // Import the smaller components
 import ContentTab from "./ContentTab";
@@ -16,14 +15,20 @@ import EditorFooter from "./EditorFooter";
 interface BookEditorProps {
   bookContent: string;
   onUpdateContent: (content: string) => void;
+  formatOptions: BookFormatOptions;
+  onUpdateFormatOption: (key: keyof BookFormatOptions, value: any) => void;
 }
 
-const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
+const BookEditor = ({ 
+  bookContent, 
+  onUpdateContent, 
+  formatOptions, 
+  onUpdateFormatOption 
+}: BookEditorProps) => {
   const { toast } = useToast();
   const [editedContent, setEditedContent] = useState(bookContent);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("content");
-  const [formatOptions, setFormatOptions] = useState<BookFormatOptions>(defaultFormatOptions);
 
   // Update local state when parent content changes
   useEffect(() => {
@@ -32,6 +37,20 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
     }
   }, [bookContent, isEditing]);
 
+  // Check if there's a saved draft in localStorage
+  useEffect(() => {
+    if (!editedContent) {
+      const savedContent = localStorage.getItem("current_book_content");
+      if (savedContent) {
+        setEditedContent(savedContent);
+        toast({
+          title: "Draft Loaded",
+          description: "Your previously saved draft has been loaded.",
+        });
+      }
+    }
+  }, []);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditedContent(e.target.value);
     setIsEditing(true);
@@ -39,6 +58,15 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
 
   const handleSave = () => {
     onUpdateContent(editedContent);
+    
+    // Save to localStorage as backup
+    try {
+      localStorage.setItem("current_book_content", editedContent);
+      localStorage.setItem("last_edited", new Date().toISOString());
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+    }
+    
     toast({
       title: "Content Saved",
       description: "Your edits have been saved successfully.",
@@ -61,13 +89,6 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
       title: "Copied to Clipboard",
       description: "Book content has been copied to your clipboard.",
     });
-  };
-
-  const updateFormatOption = (key: keyof BookFormatOptions, value: any) => {
-    setFormatOptions(prev => ({
-      ...prev,
-      [key]: value
-    }));
   };
 
   const handleTabToggle = () => {
@@ -110,7 +131,7 @@ const BookEditor = ({ bookContent, onUpdateContent }: BookEditorProps) => {
           <TabsContent value="formatting" className="mt-0">
             <FormatOptionsTab 
               formatOptions={formatOptions}
-              onUpdateFormatOption={updateFormatOption}
+              onUpdateFormatOption={onUpdateFormatOption}
             />
           </TabsContent>
         </Tabs>

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { calculateBookStats, parseBookContent } from "@/utils/formatters";
 import BookStats from "@/components/book-preview/BookStats";
 import BookPreviewHeader from "@/components/book-preview/BookPreviewHeader";
@@ -17,6 +17,11 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
   const [currentContent, setCurrentContent] = useState(bookContent);
   const [formattedContent, setFormattedContent] = useState("");
   
+  // Update local content when parent content changes
+  useEffect(() => {
+    setCurrentContent(bookContent);
+  }, [bookContent]);
+  
   const { title } = parseBookContent(currentContent);
   const { wordCount, chapterCount, estimatedReadingTime } = calculateBookStats(currentContent);
 
@@ -24,6 +29,15 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
     setCurrentContent(updatedContent);
     if (onContentUpdate) {
       onContentUpdate(updatedContent);
+    }
+    
+    // Save to local storage for retrieval
+    try {
+      localStorage.setItem("current_book_content", updatedContent);
+      localStorage.setItem("current_book_title", title);
+      localStorage.setItem("last_edited", new Date().toISOString());
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
     }
   };
 
@@ -60,6 +74,7 @@ const BookPreview = ({ bookContent, onReset, onContentUpdate }: BookPreviewProps
         isFormatted={formatManager.isFormatted}
         onContentUpdate={handleContentUpdate}
         onFormatBook={formatManager.handleFormatBook}
+        onUpdateFormatOption={formatManager.updateFormatOption}
         onDownloadDocx={() => exportManager.handleDownloadDocx(title)}
         onDownloadPdf={() => exportManager.handleDownloadPdf(title)}
         onExportToGoogleDocs={() => exportManager.handleExportToGoogleDocs(title)}

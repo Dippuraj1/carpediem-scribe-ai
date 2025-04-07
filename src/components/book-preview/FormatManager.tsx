@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { BookFormatOptions } from "@/types/book";
-import { defaultFormatOptions } from "@/utils/exporters";
+import { defaultFormatOptions } from "@/utils/formatOptions";
+import { applyFormatting } from "@/utils/formatHelpers";
 
 interface FormatManagerProps {
   content: string;
@@ -11,20 +12,22 @@ interface FormatManagerProps {
 
 const FormatManager = ({ content, onFormatComplete }: FormatManagerProps) => {
   const { toast } = useToast();
-  const [formatOptions] = useState<BookFormatOptions>(defaultFormatOptions);
+  const [formatOptions, setFormatOptions] = useState<BookFormatOptions>(defaultFormatOptions);
   const [isFormatted, setIsFormatted] = useState(false);
   
   const handleFormatBook = () => {
     try {
-      // In a real implementation, this would apply all formatting rules
+      // Apply formatting to the content
+      const formattedContent = applyFormatting(content, formatOptions);
       setIsFormatted(true);
-      onFormatComplete(content);
+      onFormatComplete(formattedContent);
       
       toast({
         title: "Book Formatted",
         description: "Your book has been formatted and is ready for download.",
       });
     } catch (error) {
+      console.error("Error formatting book:", error);
       toast({
         title: "Formatting Error",
         description: "An error occurred while formatting your book.",
@@ -33,7 +36,14 @@ const FormatManager = ({ content, onFormatComplete }: FormatManagerProps) => {
     }
   };
 
-  return { formatOptions, isFormatted, handleFormatBook };
+  const updateFormatOption = (key: keyof BookFormatOptions, value: any) => {
+    setFormatOptions(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  return { formatOptions, isFormatted, handleFormatBook, updateFormatOption };
 };
 
 export default FormatManager;
